@@ -37,7 +37,7 @@ function App() {
     <div className="min-h-screen bg-background text-foreground flex flex-col items-center p-4">
       <header className="w-full max-w-md py-6 flex flex-col items-center">
         <h1 className="text-3xl font-bold tracking-tight text-primary mb-2">Nutrient Risk Profiler</h1>
-        <p className="text-muted-foreground text-center">Instantly check the risk profile of Indian food items.</p>
+        <p className="text-muted-foreground text-center">Instantly check the risk profile of food items.</p>
       </header>
 
       <main className="w-full max-w-md flex-1 flex flex-col gap-6">

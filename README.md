@@ -1,16 +1,35 @@
 # Nutrient Risk Profiler
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A web application to check the risk profile of food items, inspired by Yuka.
 
-Currently, two official plugins are available:
+![Nutrient Risk Profiler Analysis](/public/screenshots/example-analysis.png)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## React Compiler
+- **Product Search**: Search for food items by name.
+- **Risk Scoring**: Custom scoring algorithm based on nutritional values (Calories, Sugar, Fat, etc.).
+- **Detailed Analysis**: View breakdown of nutrients and ingredients.
+- **Premium Design**: Modern, responsive UI with smooth animations.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## How to Run
 
-## Expanding the ESLint configuration
+1.  **Install Dependencies**:
+    ```bash
+    npm install
+    ```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+2.  **Start Dev Server**:
+    ```bash
+    npm run dev
+    ```
+
+3.  **Open Browser**:
+    Navigate to `http://localhost:5173`
+
+## Tech Stack
+
+- React
+- Vite
+- TailwindCSS
+- OpenFoodFacts API
+

@@ -1,6 +1,6 @@
 # Walkthrough - Nutrient Risk Profiler
 
-I have built a "Yuka-like" web application to check the risk profile of Indian food items.
+I have built a "Yuka-like" web application to check the risk profile of food items.
 
 ## Features Implemented
 
@@ -44,7 +44,7 @@ I have built a "Yuka-like" web application to check the risk profile of Indian f
     Navigate to `http://localhost:5173`
 
 ## Verification
-- **Search**: Verified searching for common Indian items returns results.
+- **Search**: Verified searching for common items returns results.
 - **Scoring**: Verified "Lays" gets a low score (Red/Yellow) due to fat/salt, while healthier options get higher scores.
 - **Caching**: Verified repeated searches load instantly from cache.
 
