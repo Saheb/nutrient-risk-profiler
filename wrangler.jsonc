@@ -1,5 +1,5 @@
 {
-    "name": "nutrient-risk-profiler",
+    "name": "nutrient-profiler",
     "compatibility_date": "2024-11-20",
     "assets": {
         "directory": "./dist"
