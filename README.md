@@ -2,7 +2,10 @@
 
 A web application to check the risk profile of food items, inspired by Yuka.
 
-![Nutrient Risk Profiler Analysis](/public/screenshots/example-analysis.png)
+<div style="display: flex; gap: 10px; align-items: flex-start;">
+  <img src="/public/screenshots/example-poor.png" alt="Poor Score Example" width="48%" />
+  <img src="/public/screenshots/example-good.png" alt="Good Score Example" width="48%" />
+</div>
 
 ## Features
 
