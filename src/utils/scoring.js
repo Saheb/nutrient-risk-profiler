@@ -164,6 +164,9 @@ export const getNutrientLevel = (nutrient, value) => {
             if (value > 0.6) return 'high';
             if (value > 0.1) return 'medium';
             return 'low';
+        case 'fiber': // Higher is better
+            if (value > 3) return 'good';
+            return 'neutral';
         case 'protein': // Higher is better
             if (value > 8) return 'good';
             return 'neutral';

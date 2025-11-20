@@ -165,6 +165,10 @@ const ProductDetails = ({ product, onBack }) => {
                             <NutrientBox label="Protein" value={product.nutriments?.proteins_100g} unit="g" nutrientType="protein" />
                             <NutrientBox label="Sodium" value={product.nutriments?.sodium_100g} unit="g" nutrientType="sodium" />
                         </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <NutrientBox label="Carbs" value={product.nutriments?.carbohydrates_100g} unit="g" />
+                            <NutrientBox label="Fiber" value={product.nutriments?.fiber_100g} unit="g" nutrientType="fiber" />
+                        </div>
 
                         <div className="grid grid-cols-2 gap-2">
                             {/* Sugar Group */}
