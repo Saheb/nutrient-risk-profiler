@@ -1,1 +1,4 @@
+/assets/* /assets/:splat 200
+/screenshots/* /screenshots/:splat 200
+/*.svg /:splat 200
 /* / 200
