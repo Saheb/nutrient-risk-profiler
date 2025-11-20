@@ -181,7 +181,7 @@ const ProductDetails = ({ product, onBack }) => {
                     {product.ingredients_text && (
                         <div className="w-full space-y-1.5 bg-background/50 p-3 rounded-lg border border-border/50">
                             <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ingredients</h3>
-                            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-4">
+                            <p className="text-xs text-foreground/90 leading-relaxed line-clamp-4">
                                 {product.ingredients_text}
                             </p>
                         </div>
@@ -214,7 +214,7 @@ const NutrientBox = ({ label, value, unit, nutrientType, className = '' }) => {
         level = getNutrientLevel(nutrientType, value);
     }
 
-    let colorClass = 'bg-background/80 border-border/50';
+    let colorClass = 'bg-secondary/10 border-border/50';
     // Always use black/dark text for readability on colored backgrounds
     let textClass = 'text-slate-700 dark:text-slate-300';
     let valueClass = 'text-foreground';
