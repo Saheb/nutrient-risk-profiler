@@ -50,7 +50,16 @@ const ProductDetails = ({ product, onBack }) => {
                     footer.style.display = 'flex';
                 }
 
-                const dataUrl = await htmlToImage.toPng(element, { cacheBust: true, useCORS: true, pixelRatio: 3 });
+                // Get body background color (which is solid) instead of element background (which might be transparent/tinted)
+                const bodyStyle = window.getComputedStyle(document.body);
+                const bgColor = bodyStyle.backgroundColor;
+
+                const dataUrl = await htmlToImage.toPng(element, {
+                    cacheBust: true,
+                    useCORS: true,
+                    pixelRatio: 3,
+                    backgroundColor: bgColor
+                });
 
                 // Restore DOM
                 if (header) header.style.display = '';
@@ -215,8 +224,8 @@ const NutrientBox = ({ label, value, unit, nutrientType, className = '' }) => {
     }
 
     let colorClass = 'bg-secondary/10 border-border/50';
-    // Always use black/dark text for readability on colored backgrounds
-    let textClass = 'text-slate-700 dark:text-slate-300';
+    // Use semantic colors to handle both native dark mode and browser-forced dark modes
+    let textClass = 'text-foreground/70';
     let valueClass = 'text-foreground';
 
     if (level === 'high') {
