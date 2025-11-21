@@ -123,14 +123,16 @@ function calculateFruitVegScore(val) {
 
 export const getScoreColor = (score) => {
     if (score === null || score === undefined) return 'bg-gray-200 text-gray-500';
-    if (score >= 70) return 'bg-green-500 text-white'; // Excellent
+    if (score >= 90) return 'bg-emerald-600 text-white'; // Excellent (Darker Green)
+    if (score >= 70) return 'bg-green-500 text-white'; // Good (Green)
     if (score >= 40) return 'bg-yellow-500 text-white'; // Moderate
     return 'bg-red-500 text-white'; // Poor
 };
 
 export const getScoreLabel = (score) => {
     if (score === null || score === undefined) return 'Unknown';
-    if (score >= 70) return 'Excellent';
+    if (score >= 90) return 'Excellent';
+    if (score >= 70) return 'Good';
     if (score >= 40) return 'Moderate';
     return 'Poor';
 };

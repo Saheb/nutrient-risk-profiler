@@ -63,7 +63,14 @@ const ProductDetails = ({ product, onBack }) => {
         badge: 'bg-red-500'
     };
 
-    if (score >= 70) {
+    if (score >= 90) {
+        colorTheme = {
+            border: 'border-emerald-600/50',
+            bg: 'bg-emerald-600/5',
+            text: 'text-emerald-700 dark:text-emerald-400',
+            badge: 'bg-emerald-600'
+        };
+    } else if (score >= 70) {
         colorTheme = {
             border: 'border-green-500/50',
             bg: 'bg-green-500/5',

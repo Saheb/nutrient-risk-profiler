@@ -42,7 +42,8 @@ The final score is calculated as `Base (80) - Penalties + Bonuses`, clamped betw
 
 | Score Range | Risk Level | Color |
 | :--- | :--- | :--- |
-| **70 - 100** | Excellent | Green |
+| **90 - 100** | Excellent | Dark Green |
+| **70 - 89** | Good | Green |
 | **40 - 69** | Moderate | Yellow |
 | **0 - 39** | Poor | Red |
 
