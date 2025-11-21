@@ -1,10 +1,17 @@
 {
-    "name": "nutrient-profiler",
-    "compatibility_date": "2024-11-20",
-    "assets": {
-        "directory": "./dist"
-    },
-    "observability": {
-        "enabled": true
-    }
+	"name": "nutrient-profiler",
+	"compatibility_date": "2024-11-20",
+	"assets": {
+		"directory": "./dist"
+	},
+	"observability": {
+		"enabled": true
+	},
+	"kv_namespaces": [
+		{
+			"binding": "PRODUCT_CACHE",
+			"id": "f9a48264e2394fa0854cfa94c7403c63",
+			"remote": true
+		}
+	]
 }

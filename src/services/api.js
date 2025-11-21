@@ -4,18 +4,17 @@ import { supabase, localCache } from './supabase';
 const OFF_API_URL = 'https://world.openfoodfacts.org/cgi/search.pl';
 
 export const searchProducts = async (query) => {
-    // 1. Check Cache (Local or Supabase)
+    // 1. Check Cache (Local or Supabase) - We still keep local cache for instant navigation back/forth
     const cacheKey = `search_${query.toLowerCase().trim()} `;
     const cachedResult = localCache.get(cacheKey);
     if (cachedResult) {
-        console.log("Serving from cache:", query);
+        console.log("Serving from local cache:", query);
         return cachedResult;
     }
 
     try {
-        const response = await fetch(
-            `${OFF_API_URL}?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20`
-        );
+        // Use our new Proxy Endpoint
+        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
 
         if (!response.ok) {
             throw new Error('Network response was not ok');
@@ -24,7 +23,7 @@ export const searchProducts = async (query) => {
         const data = await response.json();
         const products = data.products || [];
 
-        // Save to cache
+        // Save to local cache
         localCache.set(cacheKey, products);
 
         return products;
@@ -36,7 +35,7 @@ export const searchProducts = async (query) => {
 
 export const getProductByBarcode = async (barcode) => {
     try {
-        const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+        const response = await fetch(`/api/product/${barcode}`);
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
