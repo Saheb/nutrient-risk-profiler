@@ -32,7 +32,7 @@ export async function onRequestGet(context) {
     const OFF_API_URL = 'https://world.openfoodfacts.org/cgi/search.pl';
     try {
         const offResponse = await fetch(
-            `${OFF_API_URL}?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20`
+            `${OFF_API_URL}?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20&sort_by=unique_scans_n`
         );
 
         if (!offResponse.ok) {
