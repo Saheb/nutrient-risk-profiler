@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Share2, Download, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ArrowLeft, Share2, Download, ThumbsUp, ThumbsDown, ExternalLink } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import * as htmlToImage from 'html-to-image';
 import { calculateScore, getScoreLabel, getNutrientLevel } from '../utils/scoring';
@@ -100,6 +100,10 @@ const ProductDetails = ({ product, onBack }) => {
                     footer.style.display = 'flex';
                 }
 
+                // Hide external link icon for screenshot
+                const externalLinkIcon = document.getElementById('nutriscore-external-icon');
+                if (externalLinkIcon) externalLinkIcon.style.display = 'none';
+
                 // Get body background color (which is solid) instead of element background (which might be transparent/tinted)
                 const bodyStyle = window.getComputedStyle(document.body);
                 const bgColor = bodyStyle.backgroundColor;
@@ -117,6 +121,7 @@ const ProductDetails = ({ product, onBack }) => {
                     footer.classList.add('hidden');
                     footer.style.display = '';
                 }
+                if (externalLinkIcon) externalLinkIcon.style.display = '';
 
                 const link = document.createElement('a');
                 link.download = `${product.product_name.replace(/\s+/g, '-').toLowerCase()}-analysis.png`;
@@ -200,6 +205,21 @@ const ProductDetails = ({ product, onBack }) => {
                                 <span className={`text-sm font-medium ${colorTheme.text}`}>
                                     {scoreLabel}
                                 </span>
+                                {product.nutriscore_grade && (
+                                    <a
+                                        href={`https://world.openfoodfacts.org/product/${product.code}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="ml-auto flex items-center gap-1 px-2 py-1 rounded-md bg-secondary/10 border border-border/50 hover:bg-secondary/20 transition-colors group"
+                                        title="View on OpenFoodFacts"
+                                    >
+                                        <span className="text-[10px] font-semibold text-muted-foreground uppercase">Nutri-Score</span>
+                                        <span className={`text-sm font-bold uppercase ${getNutriScoreColor(product.nutriscore_grade)}`}>
+                                            {product.nutriscore_grade}
+                                        </span>
+                                        <ExternalLink id="nutriscore-external-icon" className="h-3 w-3 text-muted-foreground/50 group-hover:text-muted-foreground ml-0.5" />
+                                    </a>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -341,3 +361,14 @@ const NutrientBox = ({ label, value, unit, nutrientType, className = '' }) => {
 };
 
 export default ProductDetails;
+
+const getNutriScoreColor = (grade) => {
+    switch (grade?.toLowerCase()) {
+        case 'a': return 'text-green-600';
+        case 'b': return 'text-emerald-500';
+        case 'c': return 'text-yellow-500';
+        case 'd': return 'text-orange-500';
+        case 'e': return 'text-red-500';
+        default: return 'text-gray-500';
+    }
+};
