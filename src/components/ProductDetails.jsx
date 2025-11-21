@@ -90,18 +90,18 @@ const ProductDetails = ({ product, onBack }) => {
         <>
             <Helmet>
                 <title>{`Nutrient Risk Profiler: ${product.product_name}`}</title>
-                <meta name="description" content={`Check out ${product.product_name}! Risk Score: ${score} (${scoreLabel} Risk).`} />
+                <meta name="description" content={`Check out ${product.product_name}! Risk Score: ${score} (${scoreLabel}).`} />
 
                 {/* Open Graph / Facebook */}
                 <meta property="og:type" content="website" />
                 <meta property="og:title" content={`Nutrient Risk Profiler: ${product.product_name}`} />
-                <meta property="og:description" content={`Check out ${product.product_name}! Risk Score: ${score} (${scoreLabel} Risk).`} />
+                <meta property="og:description" content={`Check out ${product.product_name}! Risk Score: ${score} (${scoreLabel}).`} />
                 {product.image_url && <meta property="og:image" content={product.image_url} />}
 
                 {/* Twitter */}
                 <meta name="twitter:card" content="summary_large_image" />
                 <meta name="twitter:title" content={`Nutrient Risk Profiler: ${product.product_name}`} />
-                <meta name="twitter:description" content={`Check out ${product.product_name}! Risk Score: ${score} (${scoreLabel} Risk).`} />
+                <meta name="twitter:description" content={`Check out ${product.product_name}! Risk Score: ${score} (${scoreLabel}).`} />
                 {product.image_url && <meta name="twitter:image" content={product.image_url} />}
             </Helmet>
 
@@ -148,7 +148,7 @@ const ProductDetails = ({ product, onBack }) => {
                                     Score: {score}
                                 </div>
                                 <span className={`text-sm font-medium ${colorTheme.text}`}>
-                                    {scoreLabel} Risk
+                                    {scoreLabel}
                                 </span>
                             </div>
                         </div>
