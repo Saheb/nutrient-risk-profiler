@@ -205,7 +205,7 @@ const ProductDetails = ({ product, onBack }) => {
                 <div id="card-footer" className="hidden p-6 border-t border-border/50 bg-secondary/10 flex-col items-center justify-center text-center gap-2">
                     <p className="text-lg font-bold text-foreground">Powered by OpenFoodFacts</p>
                     <p className="text-sm font-medium text-muted-foreground">View on Nutrient Risk Profiler</p>
-                    <p className="text-xs text-muted-foreground/70">{window.location.origin}</p>
+                    <p className="text-xs text-muted-foreground/70">{window.location.href}</p>
                 </div>
             </div>
 
