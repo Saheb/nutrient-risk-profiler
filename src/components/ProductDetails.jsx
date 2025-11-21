@@ -104,30 +104,17 @@ const ProductDetails = ({ product, onBack }) => {
                 const externalLinkIcon = document.getElementById('nutriscore-external-icon');
                 if (externalLinkIcon) externalLinkIcon.style.display = 'none';
 
-                // Get body background color (which is solid) instead of element background (which might be transparent/tinted)
-                const bodyStyle = window.getComputedStyle(document.body);
-                const bgColor = bodyStyle.backgroundColor;
+                const blob = await generateImageBlob(element, header, footer, externalLinkIcon);
+                if (!blob) throw new Error('Failed to generate blob');
 
-                const dataUrl = await htmlToImage.toPng(element, {
-                    cacheBust: true,
-                    useCORS: true,
-                    pixelRatio: 3,
-                    backgroundColor: bgColor
-                });
-
-                // Restore DOM
-                if (header) header.style.display = '';
-                if (footer) {
-                    footer.classList.add('hidden');
-                    footer.style.display = '';
-                }
-                if (externalLinkIcon) externalLinkIcon.style.display = '';
-
+                const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.download = `${product.product_name.replace(/\s+/g, '-').toLowerCase()}-analysis.png`;
-                link.href = dataUrl;
+                link.href = url;
                 link.click();
+                URL.revokeObjectURL(url);
             } catch (err) {
+
                 console.error('Failed to download image:', err);
                 alert('Failed to generate image. Please try again.');
 
@@ -319,6 +306,13 @@ const ProductDetails = ({ product, onBack }) => {
                 score={score}
                 scoreLabel={scoreLabel}
                 onDownload={handleDownload}
+                onGenerateImage={() => {
+                    const element = document.getElementById('product-analysis-card');
+                    const header = document.getElementById('card-header');
+                    const footer = document.getElementById('card-footer');
+                    const externalLinkIcon = document.getElementById('nutriscore-external-icon');
+                    return generateImageBlob(element, header, footer, externalLinkIcon);
+                }}
             />
         </>
     );
@@ -370,5 +364,50 @@ const getNutriScoreColor = (grade) => {
         case 'd': return 'text-orange-500';
         case 'e': return 'text-red-500';
         default: return 'text-gray-500';
+    }
+};
+
+const generateImageBlob = async (element, header, footer, externalLinkIcon) => {
+    if (!element) return null;
+
+    try {
+        // Temporarily modify DOM for screenshot
+        if (header) header.style.display = 'none';
+        if (footer) {
+            footer.classList.remove('hidden');
+            footer.style.display = 'flex';
+        }
+        if (externalLinkIcon) externalLinkIcon.style.display = 'none';
+
+        // Get body background color
+        const bodyStyle = window.getComputedStyle(document.body);
+        const bgColor = bodyStyle.backgroundColor;
+
+        const blob = await htmlToImage.toBlob(element, {
+            cacheBust: true,
+            useCORS: true,
+            pixelRatio: 3,
+            backgroundColor: bgColor
+        });
+
+        // Restore DOM
+        if (header) header.style.display = '';
+        if (footer) {
+            footer.classList.add('hidden');
+            footer.style.display = '';
+        }
+        if (externalLinkIcon) externalLinkIcon.style.display = '';
+
+        return blob;
+    } catch (err) {
+        console.error('Failed to generate image blob:', err);
+        // Ensure DOM is restored even on error
+        if (header) header.style.display = '';
+        if (footer) {
+            footer.classList.add('hidden');
+            footer.style.display = '';
+        }
+        if (externalLinkIcon) externalLinkIcon.style.display = '';
+        return null;
     }
 };

@@ -1,13 +1,38 @@
 import React from 'react';
 import { X, MessageCircle, Twitter, Facebook, Mail, Link, Download } from 'lucide-react';
 
-const ShareModal = ({ isOpen, onClose, product, score, scoreLabel, onDownload }) => {
+const ShareModal = ({ isOpen, onClose, product, score, scoreLabel, onDownload, onGenerateImage }) => {
     if (!isOpen) return null;
 
     const shareUrl = window.location.href;
     const shareText = `Check out ${product.product_name} on Nutrient Risk Profiler! Risk Score: ${score} (${scoreLabel}).`;
 
-    const handleShare = (platform) => {
+    const handleShare = async (platform) => {
+        // Try Web Share API for mobile/supported browsers first
+        if (navigator.share && onGenerateImage) {
+            try {
+                const blob = await onGenerateImage();
+                if (blob) {
+                    const file = new File([blob], 'analysis.png', { type: 'image/png' });
+                    const shareData = {
+                        title: `Nutrient Risk Profiler: ${product.product_name}`,
+                        text: shareText,
+                        url: shareUrl,
+                        files: [file]
+                    };
+
+                    if (navigator.canShare && navigator.canShare(shareData)) {
+                        await navigator.share(shareData);
+                        return; // Success, exit
+                    }
+                }
+            } catch (err) {
+                console.warn('Web Share API failed, falling back to URL share:', err);
+                // Fallback to URL sharing below
+            }
+        }
+
+        // Fallback or specific platform URL sharing
         let url = '';
         switch (platform) {
             case 'whatsapp':
