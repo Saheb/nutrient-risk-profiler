@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Share2, Download } from 'lucide-react';
+import { ArrowLeft, Share2, Download, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import * as htmlToImage from 'html-to-image';
 import { calculateScore, getScoreLabel, getNutrientLevel } from '../utils/scoring';
@@ -11,6 +11,49 @@ const ProductDetails = ({ product, onBack }) => {
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const score = calculateScore(product);
     const scoreLabel = getScoreLabel(score);
+    const [feedback, setFeedback] = useState({ up: 0, down: 0 });
+    const [userVote, setUserVote] = useState(null); // 'up', 'down', or null
+
+    // Load feedback on mount
+    React.useEffect(() => {
+        if (product?.code) {
+            const loadFeedback = async () => {
+                try {
+                    const res = await fetch(`/api/feedback?id=${product.code}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        setFeedback(data);
+                    }
+                } catch (e) {
+                    console.error("Failed to load feedback", e);
+                }
+            };
+            loadFeedback();
+
+            // Check local storage for previous vote
+            const vote = localStorage.getItem(`vote_${product.code}`);
+            if (vote) setUserVote(vote);
+        }
+    }, [product?.code]);
+
+    const handleVote = async (type) => {
+        if (userVote) return; // Already voted
+
+        // Optimistic update
+        setFeedback(prev => ({ ...prev, [type]: prev[type] + 1 }));
+        setUserVote(type);
+        localStorage.setItem(`vote_${product.code}`, type);
+
+        try {
+            await fetch('/api/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: product.code, type })
+            });
+        } catch (e) {
+            console.error("Failed to submit vote", e);
+        }
+    };
 
     // Determine colors based on score
     let colorTheme = {
@@ -201,11 +244,44 @@ const ProductDetails = ({ product, onBack }) => {
                     )}
                 </div>
 
+
+
+
+
                 {/* Footer for Image Download */}
                 <div id="card-footer" className="hidden p-6 border-t border-border/50 bg-secondary/10 flex-col items-center justify-center text-center gap-2">
                     <p className="text-lg font-bold text-foreground">Powered by OpenFoodFacts</p>
                     <p className="text-sm font-medium text-muted-foreground">View on Nutrient Risk Profiler</p>
                     <p className="text-xs text-muted-foreground/70">{window.location.href}</p>
+                </div>
+            </div >
+
+            {/* Feedback Section */}
+            <div className="px-4 py-6 flex flex-col items-center gap-3">
+                <p className="text-xs font-medium text-muted-foreground">Was this analysis helpful?</p>
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => handleVote('up')}
+                        disabled={!!userVote}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all ${userVote === 'up'
+                            ? 'bg-green-500/10 border-green-500 text-green-600'
+                            : 'bg-background border-border hover:bg-secondary'
+                            }`}
+                    >
+                        <ThumbsUp className={`h-4 w-4 ${userVote === 'up' ? 'fill-current' : ''}`} />
+                        <span className="text-xs font-semibold">{feedback.up}</span>
+                    </button>
+                    <button
+                        onClick={() => handleVote('down')}
+                        disabled={!!userVote}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all ${userVote === 'down'
+                            ? 'bg-red-500/10 border-red-500 text-red-600'
+                            : 'bg-background border-border hover:bg-secondary'
+                            }`}
+                    >
+                        <ThumbsDown className={`h-4 w-4 ${userVote === 'down' ? 'fill-current' : ''}`} />
+                        <span className="text-xs font-semibold">{feedback.down}</span>
+                    </button>
                 </div>
             </div>
 
