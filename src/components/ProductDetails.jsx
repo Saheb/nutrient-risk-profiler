@@ -179,13 +179,13 @@ const ProductDetails = ({ product, onBack }) => {
                         </div>
 
                         {/* Product Info & Score */}
-                        <div className="flex-1 min-w-0 flex flex-col justify-between h-24">
+                        <div className="flex-1 min-w-0 flex flex-col gap-3">
                             <div>
                                 <h1 className="font-bold text-lg leading-tight truncate">{product.product_name}</h1>
                                 <p className="text-sm text-muted-foreground truncate">{product.brands}</p>
                             </div>
 
-                            <div className="flex items-center gap-3 mt-auto">
+                            <div className="flex flex-wrap items-center gap-2 mt-auto">
                                 <div className={`px-3 py-1 rounded-full text-white text-sm font-bold shadow-sm ${colorTheme.badge}`}>
                                     Score: {score}
                                 </div>
@@ -197,7 +197,7 @@ const ProductDetails = ({ product, onBack }) => {
                                         href={`https://world.openfoodfacts.org/product/${product.code}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="ml-auto flex items-center gap-1 px-2 py-1 rounded-md bg-secondary/10 border border-border/50 hover:bg-secondary/20 transition-colors group"
+                                        className="flex items-center gap-1 px-2 py-1 rounded-md bg-secondary/10 border border-border/50 hover:bg-secondary/20 transition-colors group"
                                         title="View on OpenFoodFacts"
                                     >
                                         <span className="text-[10px] font-semibold text-muted-foreground uppercase">Nutri-Score</span>
