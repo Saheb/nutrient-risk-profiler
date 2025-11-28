@@ -1,59 +1,74 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Html5QrcodeScanner, Html5Qrcode } from 'html5-qrcode';
-import { X } from 'lucide-react';
+import { Html5Qrcode } from 'html5-qrcode';
+import { X, Camera, AlertCircle, Loader2 } from 'lucide-react';
 
 const BarcodeScanner = ({ onScanSuccess, onClose }) => {
-    const scannerRef = useRef(null);
     const [error, setError] = useState(null);
+    const [isScanning, setIsScanning] = useState(true);
+    const scannerRef = useRef(null);
+    const scannerId = "reader";
 
     useEffect(() => {
-        // Use Html5QrcodeScanner for a pre-built UI, or Html5Qrcode for custom UI.
-        // Using Html5QrcodeScanner for simplicity and speed as per plan.
-        // However, the plan mentioned "modal or overlay", so we need to wrap it.
+        let html5QrCode;
 
-        const scannerId = "reader";
-        let scanner = null;
+        const startScanning = async () => {
+            try {
+                html5QrCode = new Html5Qrcode(scannerId);
+                scannerRef.current = html5QrCode;
 
-        try {
-            scanner = new Html5QrcodeScanner(
-                scannerId,
-                {
-                    fps: 10,
-                    qrbox: { width: 250, height: 250 },
-                    aspectRatio: 1.0
-                },
-                /* verbose= */ false
-            );
+                await html5QrCode.start(
+                    { facingMode: "environment" }, // Prefer back camera
+                    {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 },
+                        aspectRatio: 1.0
+                    },
+                    (decodedText, decodedResult) => {
+                        console.log(`Scan result: ${decodedText}`, decodedResult);
+                        onScanSuccess(decodedText);
 
-            scanner.render(
-                (decodedText, decodedResult) => {
-                    // Handle success
-                    console.log(`Scan result: ${decodedText}`, decodedResult);
-                    onScanSuccess(decodedText);
-                    // Optional: Close scanner automatically on success? 
-                    // Let's leave it to the parent or user to close, or maybe close it.
-                    // Usually better to close it to avoid multiple scans.
-                    scanner.clear();
-                    onClose();
-                },
-                (errorMessage) => {
-                    // parse error, ignore it.
-                    // console.warn(`Code scan error = ${errorMessage}`);
-                }
-            );
-        } catch (err) {
-            console.error("Failed to initialize scanner", err);
-            setError("Failed to initialize camera. Please ensure camera permissions are granted.");
-        }
+                        // Stop scanning after success
+                        html5QrCode.stop().then(() => {
+                            scannerRef.current = null;
+                            onClose();
+                        }).catch(err => console.error("Failed to stop scanner", err));
+                    },
+                    (errorMessage) => {
+                        // parse error, ignore it.
+                    }
+                );
+                setIsScanning(true);
+            } catch (err) {
+                console.error("Failed to start scanner", err);
+                setError("Failed to start camera. Please ensure camera permissions are granted.");
+                setIsScanning(false);
+            }
+        };
+
+        // Small delay to ensure DOM is ready
+        const timer = setTimeout(() => {
+            startScanning();
+        }, 100);
 
         return () => {
-            if (scanner) {
-                scanner.clear().catch(error => {
-                    console.error("Failed to clear html5-qrcode scanner. ", error);
+            clearTimeout(timer);
+            if (scannerRef.current) {
+                scannerRef.current.stop().catch(error => {
+                    console.error("Failed to stop html5-qrcode scanner cleanup. ", error);
                 });
             }
         };
     }, [onScanSuccess, onClose]);
+
+    const handleRetry = () => {
+        setError(null);
+        setIsScanning(true);
+        // Re-trigger effect by unmounting/remounting or just logic? 
+        // Simplest is to just reload the component or try to restart.
+        // For now, let's just close and let user try again, or we could make the effect depend on a retry counter.
+        // But closing is safer state-wise.
+        onClose();
+    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
@@ -68,13 +83,27 @@ const BarcodeScanner = ({ onScanSuccess, onClose }) => {
                     </button>
                 </div>
 
-                <div className="p-4">
+                <div className="p-4 min-h-[300px] flex flex-col items-center justify-center bg-black/5">
                     {error ? (
-                        <div className="text-destructive text-center p-4">
-                            {error}
+                        <div className="text-center p-4 flex flex-col items-center gap-3">
+                            <AlertCircle className="h-10 w-10 text-destructive" />
+                            <p className="text-destructive font-medium">{error}</p>
+                            <button
+                                onClick={handleRetry}
+                                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                            >
+                                Close & Retry
+                            </button>
                         </div>
                     ) : (
-                        <div id="reader" className="w-full overflow-hidden rounded-lg"></div>
+                        <div className="w-full relative">
+                            <div id={scannerId} className="w-full overflow-hidden rounded-lg bg-black"></div>
+                            {!isScanning && !error && (
+                                <div className="absolute inset-0 flex items-center justify-center text-white">
+                                    <Loader2 className="h-8 w-8 animate-spin" />
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
 
