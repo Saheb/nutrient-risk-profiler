@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { X, Camera, AlertCircle, Loader2, RefreshCw, ZoomIn, ZoomOut } from 'lucide-react';
+import { X, Camera, AlertCircle, Loader2, ZoomIn, ZoomOut } from 'lucide-react';
 
 const BarcodeScanner = ({ onScanSuccess, onClose }) => {
     const [error, setError] = useState(null);
@@ -9,121 +9,145 @@ const BarcodeScanner = ({ onScanSuccess, onClose }) => {
     const [selectedCameraId, setSelectedCameraId] = useState(null);
     const [zoomCapability, setZoomCapability] = useState(null);
     const [zoomValue, setZoomValue] = useState(1);
+    const [isSwitching, setIsSwitching] = useState(false);
 
     const scannerRef = useRef(null);
     const scannerId = "reader";
 
-    // Fetch cameras on mount
+    // Fetch cameras for the dropdown
     useEffect(() => {
         Html5Qrcode.getCameras().then(devices => {
             if (devices && devices.length) {
                 setCameras(devices);
-                // Default to the last camera (usually back camera on mobile) or the one labeled "back"
-                const backCamera = devices.find(d => d.label.toLowerCase().includes('back')) || devices[devices.length - 1];
-                setSelectedCameraId(backCamera.id);
+                // We do NOT auto-select a camera ID here anymore.
+                // We let the scanner start with "environment" preference first.
+                // Later, we could try to match the active track to a device ID if needed, 
+                // but usually just letting the user pick from the list if the default fails is enough.
             }
         }).catch(err => {
-            console.error("Error getting cameras", err);
-            // Fallback to facingMode if enumeration fails
-            setSelectedCameraId("environment");
+            console.warn("Error getting cameras", err);
         });
     }, []);
 
+    // Manage Scanner Lifecycle
     useEffect(() => {
-        if (!selectedCameraId) return;
+        let isMounted = true;
 
-        let html5QrCode;
+        const startScanner = async () => {
+            if (isSwitching) return;
+            setIsSwitching(true);
+            setError(null);
 
-        const startScanning = async () => {
-            try {
-                // If instance exists, stop it first
-                if (scannerRef.current) {
-                    await scannerRef.current.stop().catch(err => console.warn("Stop failed", err));
+            // 1. Stop existing scanner if running
+            if (scannerRef.current) {
+                try {
+                    await scannerRef.current.stop();
+                } catch (err) {
+                    console.warn("Failed to stop previous scanner instance", err);
                 }
+            }
 
-                html5QrCode = new Html5Qrcode(scannerId);
-                scannerRef.current = html5QrCode;
+            if (!isMounted) return;
 
-                const config = {
-                    fps: 10,
-                    qrbox: { width: 250, height: 250 },
-                    aspectRatio: 1.0,
-                    videoConstraints: {
-                        width: { min: 640, ideal: 1280, max: 1920 },
-                        height: { min: 480, ideal: 720, max: 1080 },
-                        focusMode: "continuous"
-                    }
-                };
+            // 2. Initialize new scanner
+            const html5QrCode = new Html5Qrcode(scannerId);
+            scannerRef.current = html5QrCode;
 
-                // Use ID if available, otherwise facingMode
-                const cameraIdOrConfig = cameras.length > 0 ? selectedCameraId : { facingMode: "environment" };
+            const config = {
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0,
+                videoConstraints: {
+                    width: { min: 640, ideal: 1280, max: 1920 },
+                    height: { min: 480, ideal: 720, max: 1080 },
+                    focusMode: "continuous",
+                }
+            };
 
+            // 3. Determine Camera Config
+            // If selectedCameraId is set (user chose one), use it.
+            // Otherwise, use facingMode: "environment" to let OS pick the best back camera.
+            const cameraIdOrConfig = selectedCameraId
+                ? selectedCameraId
+                : { facingMode: "environment", ...config.videoConstraints };
+
+            try {
                 await html5QrCode.start(
                     cameraIdOrConfig,
                     config,
                     (decodedText, decodedResult) => {
                         console.log(`Scan result: ${decodedText}`, decodedResult);
                         onScanSuccess(decodedText);
+
+                        // Stop on success
                         html5QrCode.stop().then(() => {
                             scannerRef.current = null;
                             onClose();
-                        }).catch(err => console.error("Failed to stop scanner", err));
+                        }).catch(err => console.error("Failed to stop scanner after success", err));
                     },
                     (errorMessage) => {
                         // parse error, ignore it.
                     }
                 );
 
-                setIsScanning(true);
-                setError(null);
+                if (isMounted) {
+                    setIsScanning(true);
+                    setIsSwitching(false);
 
-                // Check for zoom capabilities
-                try {
-                    const capabilities = html5QrCode.getRunningTrackCameraCapabilities();
-                    const zoomCap = capabilities.zoomFeature();
-                    if (zoomCap && zoomCap.isSupported()) {
-                        setZoomCapability(zoomCap);
-                        setZoomValue(zoomCap.value());
-                    } else {
-                        setZoomCapability(null);
+                    // 4. Check Zoom Capabilities
+                    try {
+                        const capabilities = html5QrCode.getRunningTrackCameraCapabilities();
+                        const zoomCap = capabilities.zoomFeature();
+                        if (zoomCap && zoomCap.isSupported()) {
+                            setZoomCapability(zoomCap);
+                            setZoomValue(zoomCap.value());
+                        } else {
+                            setZoomCapability(null);
+                        }
+                    } catch (e) {
+                        console.warn("Zoom capabilities not supported", e);
                     }
-                } catch (e) {
-                    console.warn("Zoom capabilities not supported", e);
                 }
-
             } catch (err) {
-                console.error("Failed to start scanner", err);
-                setError("Failed to start camera. Please ensure camera permissions are granted.");
-                setIsScanning(false);
+                if (isMounted) {
+                    console.error("Failed to start scanner", err);
+                    setError("Failed to start camera. Please ensure camera permissions are granted.");
+                    setIsScanning(false);
+                    setIsSwitching(false);
+                }
             }
         };
 
-        // Small delay to ensure DOM is ready and previous cleanup is done
-        const timer = setTimeout(() => {
-            startScanning();
-        }, 300);
+        // Small delay to ensure DOM is ready and prevent rapid-fire calls
+        const timer = setTimeout(startScanner, 300);
 
         return () => {
+            isMounted = false;
             clearTimeout(timer);
             if (scannerRef.current) {
-                scannerRef.current.stop().catch(error => {
-                    console.warn("Failed to stop html5-qrcode scanner cleanup. ", error);
-                });
+                // We don't await here because it's cleanup, but we catch errors
+                scannerRef.current.stop().catch(err => console.warn("Cleanup stop failed", err));
             }
         };
-    }, [selectedCameraId, onScanSuccess, onClose]); // Re-run when camera changes
+    }, [selectedCameraId, onScanSuccess, onClose]);
 
     const handleRetry = () => {
         setError(null);
         setIsScanning(true);
-        // Force re-selection to trigger effect
-        const currentId = selectedCameraId;
+        // Toggle selectedCameraId to null and back to force re-run if needed, 
+        // or just let the effect run if we reset error.
+        // Actually, just unmounting/remounting the component via parent is easiest for retry,
+        // but here we can just try to restart by resetting state.
+        const current = selectedCameraId;
         setSelectedCameraId(null);
-        setTimeout(() => setSelectedCameraId(currentId), 100);
+        setTimeout(() => setSelectedCameraId(current), 100);
     };
 
     const handleCameraChange = (e) => {
-        setSelectedCameraId(e.target.value);
+        const newId = e.target.value;
+        if (newId !== selectedCameraId) {
+            setSelectedCameraId(newId);
+        }
     };
 
     const handleZoomChange = (e) => {
@@ -170,6 +194,7 @@ const BarcodeScanner = ({ onScanSuccess, onClose }) => {
                                         onChange={handleCameraChange}
                                         className="flex-1 bg-transparent text-sm outline-none"
                                     >
+                                        <option value="">Default (Auto)</option>
                                         {cameras.map(cam => (
                                             <option key={cam.id} value={cam.id}>
                                                 {cam.label || `Camera ${cam.id.slice(0, 5)}...`}
@@ -181,8 +206,8 @@ const BarcodeScanner = ({ onScanSuccess, onClose }) => {
 
                             <div className="w-full relative rounded-lg overflow-hidden bg-black aspect-square">
                                 <div id={scannerId} className="w-full h-full"></div>
-                                {!isScanning && !error && (
-                                    <div className="absolute inset-0 flex items-center justify-center text-white">
+                                {(isSwitching || !isScanning) && !error && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white z-10">
                                         <Loader2 className="h-8 w-8 animate-spin" />
                                     </div>
                                 )}
