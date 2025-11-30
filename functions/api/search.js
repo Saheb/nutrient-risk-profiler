@@ -47,9 +47,7 @@ export async function onRequestGet(context) {
             // Only cache if we got results
             if (products.length > 0) {
                 context.waitUntil(
-                    context.env.PRODUCT_CACHE.put(cacheKey, JSON.stringify(products), {
-                        expirationTtl: 86400, // 1 day
-                    })
+                    context.env.PRODUCT_CACHE.put(cacheKey, JSON.stringify(products))
                 );
             }
         } catch (err) {

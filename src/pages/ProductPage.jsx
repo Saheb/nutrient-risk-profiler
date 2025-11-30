@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ProductDetails from '../components/ProductDetails';
 import { getProductByBarcode } from '../services/api';
+import { saveRecentProduct } from '../utils/storage';
 
 const ProductPage = () => {
     const { id } = useParams();
@@ -18,6 +19,7 @@ const ProductPage = () => {
                 const data = await getProductByBarcode(id);
                 if (data) {
                     setProduct(data);
+                    saveRecentProduct(data);
                 } else {
                     setError('Product not found');
                 }

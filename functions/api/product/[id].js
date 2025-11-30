@@ -47,9 +47,7 @@ export async function onRequestGet(context) {
         // 3. Store in KV (TTL: 24 hours) - Non-blocking
         try {
             context.waitUntil(
-                env.PRODUCT_CACHE.put(cacheKey, JSON.stringify(product), {
-                    expirationTtl: 86400, // 1 day
-                })
+                env.PRODUCT_CACHE.put(cacheKey, JSON.stringify(product))
             );
         } catch (err) {
             console.warn('KV Put Error:', err);

@@ -4,9 +4,11 @@ import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
 import ProductCard from '../components/ProductCard';
 import { searchProducts } from '../services/api';
+import { getRecentProducts } from '../utils/storage';
 
 const Home = () => {
     const [products, setProducts] = useState([]);
+    const [recentProducts, setRecentProducts] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
     const [globalStats, setGlobalStats] = useState({ up: 0, down: 0 });
@@ -25,6 +27,7 @@ const Home = () => {
             }
         };
         fetchStats();
+        setRecentProducts(getRecentProducts());
     }, []);
 
     const handleSearch = async (query) => {
@@ -62,9 +65,25 @@ const Home = () => {
                 ) : hasSearched ? (
                     <div className="text-center py-8 text-muted-foreground">No products found.</div>
                 ) : (
-                    <div className="w-full p-4 border rounded-lg shadow-sm bg-card">
-                        <p className="text-center text-muted-foreground">Search for a product to begin...</p>
-                    </div>
+                    <>
+                        <div className="w-full p-4 border rounded-lg shadow-sm bg-card mb-4">
+                            <p className="text-center text-muted-foreground">Search for a product to begin...</p>
+                        </div>
+                        {recentProducts.length > 0 && (
+                            <div className="flex flex-col gap-3">
+                                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider px-1">
+                                    Recently Viewed ({recentProducts.length})
+                                </h2>
+                                {recentProducts.map((product) => (
+                                    <ProductCard
+                                        key={product.code || product._id || product.id}
+                                        product={product}
+                                        onClick={handleProductClick}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </>
                 )}
 
             </div>

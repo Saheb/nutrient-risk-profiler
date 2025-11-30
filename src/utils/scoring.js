@@ -9,6 +9,23 @@ export const calculateScore = (product) => {
     let score = 0;
     const nutriments = product.nutriments;
 
+    // Check for essential nutrients. If any are missing, we cannot calculate a reliable score.
+    // We check for undefined because 0 is a valid value.
+    const requiredNutrients = ['energy-kcal_100g', 'sugars_100g', 'saturated-fat_100g', 'sodium_100g'];
+    const hasData = requiredNutrients.every(key => nutriments[key] !== undefined && nutriments[key] !== null);
+
+    if (!hasData) {
+        // Try fallback for energy (kJ) if kcal is missing
+        if (nutriments['energy-kj_100g'] !== undefined &&
+            nutriments['sugars_100g'] !== undefined &&
+            nutriments['saturated-fat_100g'] !== undefined &&
+            nutriments['sodium_100g'] !== undefined) {
+            // We have enough data (using kJ)
+        } else {
+            return null;
+        }
+    }
+
     // 1. Nutritional Score (Base 0-100)
     // We start with a baseline and subtract points for "bad" nutrients and add for "good".
     // However, to map to 0-100 where 100 is best, we'll calculate a "health score".
