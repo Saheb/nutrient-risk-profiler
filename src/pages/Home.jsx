@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
-import SearchBar from '../components/SearchBar';
-import ProductCard from '../components/ProductCard';
 import { searchProducts } from '../services/api';
+import ProductCard from '../components/ProductCard';
+import SearchBar from '../components/SearchBar';
+import InstallPrompt from '../components/InstallPrompt';
 import { getRecentProducts } from '../utils/storage';
 
 const Home = () => {
@@ -44,7 +45,10 @@ const Home = () => {
     };
 
     const handleProductClick = (product) => {
-        navigate(`/product/${product.code}`);
+        const code = product.code || product._id || product.id;
+        if (code) {
+            navigate(`/product/${code}`);
+        }
     };
 
     return (
@@ -99,6 +103,8 @@ const Home = () => {
                     <span className="text-xs font-medium">{globalStats.down} unhelpful votes</span>
                 </div>
             </div>
+
+            <InstallPrompt />
         </div>
     );
 };
