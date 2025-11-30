@@ -20,11 +20,12 @@ const InstallPrompt = () => {
         window.addEventListener('beforeinstallprompt', handler);
 
         // iOS Detection
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        // Check for iOS user agent OR iPad requesting desktop site (maxTouchPoints > 0)
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
         if (isIOS && !window.matchMedia('(display-mode: standalone)').matches) {
-            // Show iOS prompt after a small delay to not be annoying immediately
-            // Or only show if user has visited before? For now, show after 3s.
-            const timer = setTimeout(() => setShowIOSPrompt(true), 3000);
+            // Show iOS prompt after a short delay
+            const timer = setTimeout(() => setShowIOSPrompt(true), 1000);
             return () => clearTimeout(timer);
         }
 
