@@ -51,7 +51,7 @@ export const calculateScore = (product) => {
     // Add for good stuff.
     // Clamp between 0 and 100.
 
-    let rawScore = 80;
+    let rawScore = 90;
 
     rawScore -= energyScore;
     rawScore -= sugarScore;
@@ -66,15 +66,15 @@ export const calculateScore = (product) => {
     // OpenFoodFacts provides 'additives_n' (number of additives) and 'additives_tags' (risk levels).
     // We'll penalize based on count and risk.
     const additivesCount = product.additives_n || 0;
-    // Simple penalty: 5 points per additive (capped at 30)
-    const additivesPenalty = Math.min(additivesCount * 5, 30);
+    // Simple penalty: 3 points per additive (capped at 30)
+    const additivesPenalty = Math.min(additivesCount * 3, 30);
 
     rawScore -= additivesPenalty;
 
-    // 3. Organic Bonus
-    if (product.labels_tags && product.labels_tags.some(tag => tag.includes('organic') || tag.includes('bio'))) {
-        rawScore += 10;
-    }
+    // 3. Organic Bonus - REMOVED
+    // if (product.labels_tags && product.labels_tags.some(tag => tag.includes('organic') || tag.includes('bio'))) {
+    //     rawScore += 10;
+    // }
 
     // Clamp
     return Math.max(0, Math.min(100, Math.round(rawScore)));
@@ -83,35 +83,35 @@ export const calculateScore = (product) => {
 // Helpers - These return "Penalty points" (positive numbers to be subtracted)
 function calculateEnergyScore(val) {
     // > 800 kcal is very high. 
-    if (val > 700) return 25;
-    if (val > 500) return 20;
-    if (val > 350) return 15;
+    if (val > 700) return 40;
+    if (val > 500) return 30;
+    if (val > 350) return 20;
     if (val > 200) return 5;
     return 0;
 }
 
 function calculateSugarScore(val) {
     // > 50g is huge
-    if (val > 40) return 40;
-    if (val > 30) return 30;
-    if (val > 20) return 20;
-    if (val > 10) return 10;
+    if (val > 40) return 50;
+    if (val > 30) return 40;
+    if (val > 20) return 30;
+    if (val > 10) return 15;
     if (val > 5) return 5;
     return 0;
 }
 
 function calculateSaturatedFatScore(val) {
-    if (val > 10) return 20;
-    if (val > 7) return 15;
-    if (val > 4) return 10;
+    if (val > 10) return 40;
+    if (val > 7) return 30;
+    if (val > 4) return 15;
     if (val > 2) return 5;
     return 0;
 }
 
 function calculateSodiumScore(val) {
     // Sodium in g. Salt = Sodium * 2.5
-    if (val > 2) return 30; // Very salty
-    if (val > 1) return 20;
+    if (val > 2) return 35; // Very salty
+    if (val > 1) return 25;
     if (val > 0.5) return 10;
     if (val > 0.2) return 5;
     return 0;
@@ -126,9 +126,9 @@ function calculateFiberScore(val) {
 }
 
 function calculateProteinScore(val) {
-    if (val > 15) return 10;
-    if (val > 8) return 7;
-    if (val > 4) return 4;
+    if (val > 15) return 15;
+    if (val > 10) return 10;
+    if (val > 5) return 5;
     return 0;
 }
 
@@ -144,7 +144,8 @@ export const getScoreColor = (score) => {
     if (score >= 90) return 'bg-emerald-600 text-white'; // Excellent (Darker Green)
     if (score >= 70) return 'bg-green-500 text-white'; // Good (Green)
     if (score >= 40) return 'bg-yellow-500 text-white'; // Moderate
-    return 'bg-red-500 text-white'; // Poor
+    if (score >= 20) return 'bg-red-500 text-white'; // Poor
+    return 'bg-red-900 text-white'; // Bad (Dark Red)
 };
 
 export const getScoreLabel = (score) => {
@@ -152,7 +153,8 @@ export const getScoreLabel = (score) => {
     if (score >= 90) return 'Excellent';
     if (score >= 70) return 'Good';
     if (score >= 40) return 'Moderate';
-    return 'Poor';
+    if (score >= 20) return 'Poor';
+    return 'Bad';
 };
 
 export const getNutrientLevel = (nutrient, value) => {
