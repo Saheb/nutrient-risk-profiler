@@ -8,8 +8,7 @@
 	"kv_namespaces": [
 		{
 			"binding": "PRODUCT_CACHE",
-			"id": "f9a48264e2394fa0854cfa94c7403c63",
-			"remote": true
+			"id": "f9a48264e2394fa0854cfa94c7403c63"
 		}
 	]
 }
