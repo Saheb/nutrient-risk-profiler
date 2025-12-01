@@ -83,18 +83,19 @@ export const calculateScore = (product) => {
 // Helpers - These return "Penalty points" (positive numbers to be subtracted)
 function calculateEnergyScore(val) {
     // > 800 kcal is very high. 
-    if (val > 800) return 20;
-    if (val > 600) return 15;
-    if (val > 400) return 10;
+    if (val > 700) return 25;
+    if (val > 500) return 20;
+    if (val > 350) return 15;
     if (val > 200) return 5;
     return 0;
 }
 
 function calculateSugarScore(val) {
     // > 50g is huge
-    if (val > 45) return 30;
-    if (val > 30) return 20;
-    if (val > 15) return 10;
+    if (val > 40) return 40;
+    if (val > 30) return 30;
+    if (val > 20) return 20;
+    if (val > 10) return 10;
     if (val > 5) return 5;
     return 0;
 }

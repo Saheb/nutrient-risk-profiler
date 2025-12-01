@@ -14,6 +14,9 @@ export default defineConfig({
         short_name: 'NutriRisk',
         description: 'Instantly check the risk profile of food items.',
         theme_color: '#ffffff',
+        background_color: '#ffffff',
+        display: 'standalone',
+        start_url: '/',
         icons: [
           {
             src: 'pwa-192x192.png',

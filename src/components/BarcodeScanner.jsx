@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { X, AlertCircle, Loader2, ZoomIn, ZoomOut } from 'lucide-react';
 
 const BarcodeScanner = ({ onScanSuccess, onClose }) => {
@@ -29,19 +29,26 @@ const BarcodeScanner = ({ onScanSuccess, onClose }) => {
 
             if (!isMounted) return;
 
-            // 2. Initialize new scanner
-            const html5QrCode = new Html5Qrcode(scannerId);
+            // 2. Initialize new scanner with restricted formats (1D only for products)
+            const formatsToSupport = [
+                Html5QrcodeSupportedFormats.EAN_13,
+                Html5QrcodeSupportedFormats.EAN_8,
+                Html5QrcodeSupportedFormats.UPC_A,
+                Html5QrcodeSupportedFormats.UPC_E,
+                Html5QrcodeSupportedFormats.CODE_128,
+            ];
+            const html5QrCode = new Html5Qrcode(scannerId, { formatsToSupport, verbose: false });
             scannerRef.current = html5QrCode;
 
             const config = {
-                fps: 10,
+                fps: 15, // Higher FPS for smoother feel
                 qrbox: { width: 250, height: 250 },
                 aspectRatio: 1.0,
                 videoConstraints: {
-                    width: { min: 640, ideal: 1280, max: 1920 },
-                    height: { min: 480, ideal: 720, max: 1080 },
+                    // Remove ideal resolution constraints to let browser pick optimal stream
+                    // This often results in smoother performance on iOS
                     focusMode: "continuous",
-                    facingMode: "environment" // Enforce back camera
+                    facingMode: "environment"
                 }
             };
 

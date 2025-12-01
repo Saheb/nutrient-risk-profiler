@@ -45,7 +45,18 @@ const InstallPrompt = () => {
 
     return (
         <>
-            {/* Android / Desktop Install Button */}
+            {/* Always visible Install Button (if not installed) */}
+            {!isStandalone && (
+                <button
+                    onClick={() => isIOS ? setShowIOSPrompt(true) : handleInstallClick()}
+                    className="fixed bottom-20 right-4 z-40 p-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-all active:scale-95"
+                    title="Install App"
+                >
+                    <Download className="h-5 w-5" />
+                </button>
+            )}
+
+            {/* Android / Desktop Install Prompt (Bottom Sheet style) */}
             {deferredPrompt && (
                 <div className="fixed bottom-4 left-4 right-4 z-50 flex justify-center animate-in slide-in-from-bottom-4 fade-in duration-500">
                     <button
