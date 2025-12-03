@@ -25,15 +25,16 @@ const parseNutritionText = (text) => {
 
     // Helper regex to find value after key words
     // Looks for: Keyword -> (optional non-digits) -> Number -> (optional decimal/space) -> Number
-    const findValue = (regex) => {
+    const findValue = (regex, fieldName) => {
         const match = text.match(regex);
+        console.log(`Searching for ${fieldName}:`, regex, "Match:", match ? match[2] : "null");
+
         if (match && match[2]) {
             let value = match[2];
             // Common OCR fixes:
             // "8 . 0" -> "8.0"
             // "8 ' 0" -> "8.0"
             // "8 0" -> "8.0" (risky, but if it's < 100g usually safe for nutrients like sugar/fat?)
-            // Actually, "8 0" is too risky. Let's focus on " . " or " , " or " ' "
 
             // Replace common OCR artifacts for decimal points
             value = value.replace(/[\s,'"]+/g, '.');
@@ -44,28 +45,37 @@ const parseNutritionText = (text) => {
             // Fix double dots ".." -> "."
             value = value.replace(/\.+/g, '.');
 
+            // Remove trailing dot if present (e.g. "12." -> "12")
+            if (value.endsWith('.')) {
+                value = value.slice(0, -1);
+            }
+
             return value;
         }
         return null;
     };
 
     // Energy / Calories (usually whole numbers)
-    extracted.energy_100g = findValue(/(energy|calories|kcal|kj)[^0-9]*([0-9]+)/i);
+    extracted.energy_100g = findValue(/(energy|calories|kcal|kj)[^0-9]*([0-9]+)/i, 'energy');
 
     // Nutrients (can be decimals)
-    // Regex explanation:
-    // [0-9]+       : Start with digits
-    // [.,\s'"]*    : Optional separator (dot, comma, space, quote) - flexible
-    // [0-9]+       : Followed by digits
-    //
-    // We capture the whole group and clean it in findValue
-    const nutrientRegex = (keyword) => new RegExp(`(${keyword})[^0-9]*([0-9]+[.,\\s'"]*[0-9]*)`, 'i');
+    // We use explicit regexes to avoid issues with dynamic RegExp creation
+    // Pattern: Digits + (Optional Separator: dot, comma, space, quote) + (Optional Digits)
+    const numberPattern = "([0-9]+[\\s.,']*[0-9]*)";
 
-    extracted.sugars_100g = findValue(nutrientRegex('sugars?|carbohydrates?'));
-    extracted.saturated_fat_100g = findValue(nutrientRegex('saturated|sat\\.? fat'));
-    extracted.sodium_100g = findValue(nutrientRegex('sodium|salt'));
-    extracted.proteins_100g = findValue(nutrientRegex('protein|proteins'));
-    extracted.fiber_100g = findValue(nutrientRegex('fiber|fibre'));
+    // Sugars
+    // Prioritize "Sugars" over "Carbohydrates" to avoid picking up the total carb value
+    extracted.sugars_100g = findValue(new RegExp(`(sugars?|of which sugars)[^0-9]*${numberPattern}`, 'i'), 'sugars');
+
+    // Fallback for sugars if not found (sometimes just listed under carbs)
+    if (!extracted.sugars_100g) {
+        extracted.sugars_100g = findValue(new RegExp(`(carbohydrates?)[^0-9]*${numberPattern}`, 'i'), 'carbs_fallback');
+    }
+
+    extracted.saturated_fat_100g = findValue(new RegExp(`(saturated|sat\\.? fat)[^0-9]*${numberPattern}`, 'i'), 'sat_fat');
+    extracted.sodium_100g = findValue(new RegExp(`(sodium|salt)[^0-9]*${numberPattern}`, 'i'), 'sodium');
+    extracted.proteins_100g = findValue(new RegExp(`(protein|proteins)[^0-9]*${numberPattern}`, 'i'), 'protein');
+    extracted.fiber_100g = findValue(new RegExp(`(fiber|fibre)[^0-9]*${numberPattern}`, 'i'), 'fiber');
 
     // Clean up: remove nulls
     Object.keys(extracted).forEach(key => {
@@ -74,5 +84,6 @@ const parseNutritionText = (text) => {
         }
     });
 
+    console.log("Final Extracted Data:", extracted);
     return extracted;
 };
