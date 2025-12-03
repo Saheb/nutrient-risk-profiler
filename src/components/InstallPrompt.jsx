@@ -88,7 +88,7 @@ const InstallPrompt = () => {
                             <div className="flex-1">
                                 <h3 className="font-semibold text-foreground mb-1">Install App</h3>
                                 <p className="text-sm text-muted-foreground leading-relaxed">
-                                    Install this app on your iPhone: tap <span className="font-bold text-foreground">Share</span> and then <span className="font-bold text-foreground">Add to Home Screen</span>.
+                                    Install this app on your iPhone: tap <span className="font-bold text-foreground inline-flex items-center gap-1">Share <Share className="h-4 w-4" /></span> and then <span className="font-bold text-foreground inline-flex items-center gap-1">Add to Home Screen <span className="text-xl leading-none">+</span></span>.
                                 </p>
                             </div>
                         </div>

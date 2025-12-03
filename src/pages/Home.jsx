@@ -61,13 +61,6 @@ const Home = () => {
                     showScanner={showScanner}
                     setShowScanner={setShowScanner}
                 />
-                <button
-                    onClick={() => navigate('/quick-scan')}
-                    className="flex-shrink-0 bg-white p-3 rounded-xl shadow-sm border border-gray-200 text-gray-600 hover:bg-gray-50 active:scale-95 transition-all"
-                    aria-label="Quick Scan Calculator"
-                >
-                    <Calculator size={24} />
-                </button>
             </div>
 
             {/* Prominent Scan Button */}
@@ -122,6 +115,17 @@ const Home = () => {
                     </>
                 )}
 
+            </div>
+
+            {/* Bottom Actions */}
+            <div className="mt-auto pt-6 pb-2">
+                <button
+                    onClick={() => navigate('/quick-scan')}
+                    className="w-full py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium shadow-sm hover:bg-gray-50 active:scale-95 transition-all flex items-center justify-center gap-2"
+                >
+                    <Calculator size={20} className="text-blue-600" />
+                    Open Score Calculator
+                </button>
             </div>
 
             {/* Global Stats Footer */}
