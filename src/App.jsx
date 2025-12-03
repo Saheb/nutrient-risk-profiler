@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import ProductPage from './pages/ProductPage';
 import AddProduct from './pages/AddProduct';
+import QuickScan from './pages/QuickScan';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/product/:id" element={<ProductPage />} />
           <Route path="/add-product" element={<AddProduct />} />
+          <Route path="/quick-scan" element={<QuickScan />} />
         </Routes>
       </main>
 

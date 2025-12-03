@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Calculator } from 'lucide-react';
 import { searchProducts } from '../services/api';
 import ProductCard from '../components/ProductCard';
 import SearchBar from '../components/SearchBar';
@@ -53,7 +53,16 @@ const Home = () => {
 
     return (
         <div className="w-full max-w-md flex-1 flex flex-col gap-6">
-            <SearchBar onSearch={handleSearch} isLoading={isLoading} />
+            <div className="flex gap-2">
+                <SearchBar onSearch={handleSearch} isLoading={isLoading} />
+                <button
+                    onClick={() => navigate('/quick-scan')}
+                    className="flex-shrink-0 bg-white p-3 rounded-xl shadow-sm border border-gray-200 text-gray-600 hover:bg-gray-50 active:scale-95 transition-all"
+                    aria-label="Quick Scan Calculator"
+                >
+                    <Calculator size={24} />
+                </button>
+            </div>
 
             <div className="flex flex-col gap-3">
                 {isLoading ? (
