@@ -5,12 +5,18 @@ const InstallPrompt = () => {
     const [deferredPrompt, setDeferredPrompt] = useState(null);
     const [showIOSPrompt, setShowIOSPrompt] = useState(false);
     const [isStandalone, setIsStandalone] = useState(false);
+    const [isIOS, setIsIOS] = useState(false);
 
     useEffect(() => {
         // Check if already installed/standalone
         if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
             setIsStandalone(true);
         }
+
+        // iOS Detection
+        // Check for iOS user agent OR iPad requesting desktop site (maxTouchPoints > 0)
+        const checkIsIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        setIsIOS(checkIsIOS);
 
         // Android / Desktop
         const handler = (e) => {
@@ -19,11 +25,7 @@ const InstallPrompt = () => {
         };
         window.addEventListener('beforeinstallprompt', handler);
 
-        // iOS Detection
-        // Check for iOS user agent OR iPad requesting desktop site (maxTouchPoints > 0)
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-        if (isIOS && !window.matchMedia('(display-mode: standalone)').matches) {
+        if (checkIsIOS && !window.matchMedia('(display-mode: standalone)').matches) {
             // Show iOS prompt after a short delay
             const timer = setTimeout(() => setShowIOSPrompt(true), 1000);
             return () => clearTimeout(timer);
