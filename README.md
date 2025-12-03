@@ -25,8 +25,8 @@ The score starts at a **Base of 90** and is adjusted based on the nutritional co
 #### 1. Negative Factors (Penalties)
 Points are subtracted for nutrients that should be limited:
 - **Energy (Calories)**: Up to -30 points for high caloric density (> 700 kcal).
-- **Sugars**: Up to -45 points for high sugar content (> 40g).
-- **Saturated Fat**: Up to -25 points for high saturated fat (> 10g).
+- **Sugars**: Up to -30 points for high sugar content (> 40g).
+- **Saturated Fat**: Up to -35 points for very high saturated fat (> 12g).
 - **Sodium**: Up to -35 points for high sodium (> 2g).
 - **Additives**: -3 points per additive (capped at -30 points).
  

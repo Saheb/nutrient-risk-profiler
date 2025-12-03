@@ -86,6 +86,7 @@ function calculateEnergyScore(val) {
     if (val > 700) return 30;
     if (val > 500) return 20;
     if (val > 350) return 15;
+    if (val > 250) return 10;
     if (val > 200) return 5;
     return 0;
 }
@@ -101,6 +102,7 @@ function calculateSugarScore(val) {
 }
 
 function calculateSaturatedFatScore(val) {
+    if (val > 12) return 35;
     if (val > 10) return 25;
     if (val > 7) return 20;
     if (val > 4) return 15;
