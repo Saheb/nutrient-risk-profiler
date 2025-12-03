@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ThumbsUp, ThumbsDown, Calculator } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Calculator, ScanBarcode } from 'lucide-react';
 import { searchProducts } from '../services/api';
 import ProductCard from '../components/ProductCard';
 import SearchBar from '../components/SearchBar';
@@ -13,6 +13,7 @@ const Home = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
     const [globalStats, setGlobalStats] = useState({ up: 0, down: 0 });
+    const [showScanner, setShowScanner] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -54,7 +55,12 @@ const Home = () => {
     return (
         <div className="w-full max-w-md flex-1 flex flex-col gap-6">
             <div className="flex gap-2">
-                <SearchBar onSearch={handleSearch} isLoading={isLoading} />
+                <SearchBar
+                    onSearch={handleSearch}
+                    isLoading={isLoading}
+                    showScanner={showScanner}
+                    setShowScanner={setShowScanner}
+                />
                 <button
                     onClick={() => navigate('/quick-scan')}
                     className="flex-shrink-0 bg-white p-3 rounded-xl shadow-sm border border-gray-200 text-gray-600 hover:bg-gray-50 active:scale-95 transition-all"
@@ -63,6 +69,15 @@ const Home = () => {
                     <Calculator size={24} />
                 </button>
             </div>
+
+            {/* Prominent Scan Button */}
+            <button
+                onClick={() => setShowScanner(true)}
+                className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold shadow-md hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+            >
+                <ScanBarcode size={20} />
+                Scan Barcode
+            </button>
 
             <div className="flex flex-col gap-3">
                 {isLoading ? (

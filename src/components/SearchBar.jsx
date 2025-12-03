@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Search, Loader2, ScanBarcode } from 'lucide-react';
 import BarcodeScanner from './BarcodeScanner';
 
-const SearchBar = ({ onSearch, isLoading }) => {
+const SearchBar = ({ onSearch, isLoading, showScanner, setShowScanner }) => {
     const [query, setQuery] = useState('');
-    const [showScanner, setShowScanner] = useState(false);
+    // Internal state removed, using props
 
     const handleSubmit = (e) => {
         e.preventDefault();
