@@ -67,7 +67,15 @@ const Home = () => {
                         />
                     ))
                 ) : hasSearched ? (
-                    <div className="text-center py-8 text-muted-foreground">No products found.</div>
+                    <div className="text-center py-12">
+                        <p className="text-gray-500 mb-4">No products found.</p>
+                        <button
+                            onClick={() => navigate('/add-product')}
+                            className="text-blue-600 font-medium hover:underline"
+                        >
+                            + Add this product manually
+                        </button>
+                    </div>
                 ) : (
                     <>
                         <div className="w-full p-4 border rounded-lg shadow-sm bg-card mb-4">
