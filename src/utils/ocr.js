@@ -84,6 +84,7 @@ const parseNutritionText = (text) => {
         }
     });
 
+    extracted.raw_text = text; // Include raw text for debugging
     console.log("Final Extracted Data:", extracted);
     return extracted;
 };

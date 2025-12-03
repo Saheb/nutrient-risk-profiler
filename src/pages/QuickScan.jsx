@@ -222,6 +222,20 @@ const QuickScan = () => {
                     </p>
                 </div>
 
+                {/* Debug View */}
+                {nutrients.raw_text && (
+                    <div className="bg-gray-100 p-4 rounded-xl border border-gray-200">
+                        <details>
+                            <summary className="text-xs font-semibold text-gray-600 cursor-pointer select-none">
+                                Debug: Raw OCR Text
+                            </summary>
+                            <pre className="mt-2 text-[10px] text-gray-500 whitespace-pre-wrap font-mono bg-white p-2 rounded border">
+                                {nutrients.raw_text}
+                            </pre>
+                        </details>
+                    </div>
+                )}
+
             </div>
         </div>
     );
