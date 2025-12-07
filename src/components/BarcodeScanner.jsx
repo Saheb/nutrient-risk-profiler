@@ -41,12 +41,14 @@ const BarcodeScanner = ({ onScanSuccess, onClose }) => {
             scannerRef.current = html5QrCode;
 
             const config = {
-                fps: 15, // Higher FPS for smoother feel
-                qrbox: { width: 250, height: 250 },
+                fps: 25, // Higher FPS for smoother feel (was 15)
+                qrbox: { width: 300, height: 150 }, // Rectangular box matches barcodes better
                 aspectRatio: 1.0,
+                useBarCodeDetectorIfSupported: true, // Use native OS scanner if available (huge perf boost on iOS)
                 videoConstraints: {
-                    // Remove ideal resolution constraints to let browser pick optimal stream
-                    // This often results in smoother performance on iOS
+                    // Set ideal resolution to avoid 4K processing overhead
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
                     focusMode: "continuous",
                     facingMode: "environment"
                 }
