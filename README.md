@@ -24,9 +24,10 @@ The score starts at a **Base of 100** and is adjusted based on the nutritional c
  
 #### 1. Negative Factors (Penalties)
 Points are subtracted for nutrients that should be limited:
-- **Energy (Calories)**: Up to -30 points for high caloric density (> 700 kcal).
-- **Sugars**: Up to -30 points for high sugar content (> 40g).
-- **Saturated Fat**: Up to -35 points for very high saturated fat (> 12g).
+- **Energy (Calories)**: Linear penalty from 0 pts (300 kcal) to 30 pts (700 kcal).
+- **Sugars**: Linear penalty from 0 pts (5g) to 40 pts (40g).
+- **Saturated Fat**: Linear penalty from 0 pts (1g) to 35 pts (12g).
+- **Sodium**: Linear penalty from 0 pts (0.2g) to 35 pts (2g).
 - **Sodium**: Up to -35 points for high sodium (> 2g).
 - **Additives**: -3 points per additive (capped at -30 points).
  

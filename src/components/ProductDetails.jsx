@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Share2, Download, ThumbsUp, ThumbsDown, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Share2, Download, ThumbsUp, ThumbsDown, ExternalLink, Copy, Check } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import * as htmlToImage from 'html-to-image';
 import { calculateScore, getScoreLabel, getNutrientLevel } from '../utils/scoring';
@@ -13,6 +13,13 @@ const ProductDetails = ({ product, onBack }) => {
     const scoreLabel = getScoreLabel(score);
     const [feedback, setFeedback] = useState({ up: 0, down: 0 });
     const [userVote, setUserVote] = useState(null); // 'up', 'down', or null
+    const [isCopied, setIsCopied] = useState(false);
+
+    const handleCopyCode = () => {
+        navigator.clipboard.writeText(product.code);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+    };
 
     // Load feedback on mount
     React.useEffect(() => {
@@ -208,6 +215,7 @@ const ProductDetails = ({ product, onBack }) => {
                                     </a>
                                 )}
                             </div>
+
                         </div>
                     </div>
 
@@ -256,6 +264,27 @@ const ProductDetails = ({ product, onBack }) => {
                             </p>
                         </div>
                     )}
+
+                    {/* Barcode Display (Bottom) */}
+                    <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                        <span className="text-xs text-muted-foreground">Product Code:</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground font-mono bg-secondary/20 px-1.5 py-0.5 rounded border border-border/50 select-all">
+                                {product.code}
+                            </span>
+                            <button
+                                onClick={handleCopyCode}
+                                className="p-1 hover:bg-secondary rounded-md transition-colors group"
+                                title="Copy Barcode"
+                            >
+                                {isCopied ? (
+                                    <Check className="h-3 w-3 text-green-500" />
+                                ) : (
+                                    <Copy className="h-3 w-3 text-muted-foreground group-hover:text-foreground" />
+                                )}
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
 

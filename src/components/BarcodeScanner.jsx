@@ -57,19 +57,25 @@ const BarcodeScanner = ({ onScanSuccess, onClose }) => {
                     { facingMode: "environment" }, // Prefer back camera
                     config,
                     (decodedText, decodedResult) => {
-                        console.log(`Scan result: ${decodedText}`, decodedResult);
-                        onScanSuccess(decodedText);
+                        // Validate barcode before accepting
+                        if (isValidBarcode(decodedText)) {
+                            console.log(`Valid scan result: ${decodedText}`, decodedResult);
+                            onScanSuccess(decodedText);
 
-                        // Stop on success
-                        html5QrCode.stop().then(() => {
-                            scannerRef.current = null;
-                            onClose();
-                        }).catch(err => console.error("Failed to stop scanner after success", err));
+                            // Stop on success
+                            html5QrCode.stop().then(() => {
+                                scannerRef.current = null;
+                                onClose();
+                            }).catch(err => console.error("Failed to stop scanner after success", err));
+                        } else {
+                            console.warn(`Ignored invalid/partial scan: ${decodedText}`);
+                        }
                     },
                     (errorMessage) => {
                         // parse error, ignore it.
                     }
                 );
+
 
                 if (isMounted) {
                     setIsScanning(true);
@@ -192,3 +198,29 @@ const BarcodeScanner = ({ onScanSuccess, onClose }) => {
 };
 
 export default BarcodeScanner;
+
+// Helper: Validate Barcode (Length + Checksum)
+const isValidBarcode = (code) => {
+    if (!code || !/^\d+$/.test(code)) return false;
+
+    // Standard lengths for EAN-8, EAN-13, UPC-A (12), GTIN-14
+    if (![8, 12, 13, 14].includes(code.length)) return false;
+
+    // Checksum Validation (Modulo 10)
+    // 1. Sum odd-position digits (from right) * 3
+    // 2. Sum even-position digits (from right) * 1
+    // 3. Total sum + check digit should be divisible by 10
+
+    const digits = code.split('').map(Number);
+    const checkDigit = digits.pop(); // Remove last digit (check digit)
+    const reversedDigits = digits.reverse();
+
+    let sum = 0;
+    for (let i = 0; i < reversedDigits.length; i++) {
+        const weight = (i % 2 === 0) ? 3 : 1; // Odd positions from right get weight 3
+        sum += reversedDigits[i] * weight;
+    }
+
+    const calculatedCheckDigit = (10 - (sum % 10)) % 10;
+    return checkDigit === calculatedCheckDigit;
+};

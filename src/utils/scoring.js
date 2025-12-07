@@ -81,42 +81,32 @@ export const calculateScore = (product) => {
 };
 
 // Helpers - These return "Penalty points" (positive numbers to be subtracted)
+// Helper for linear interpolation
+function linearScore(val, minVal, maxVal, maxPoints) {
+    if (val <= minVal) return 0;
+    if (val >= maxVal) return maxPoints;
+    // Linear mapping
+    return Math.round(((val - minVal) / (maxVal - minVal)) * maxPoints);
+}
+
 function calculateEnergyScore(val) {
-    // > 800 kcal is very high. 
-    if (val > 700) return 30;
-    if (val > 500) return 20;
-    if (val > 400) return 15; // Adjusted to 400kcal (Medium density upper bound)
-    if (val > 250) return 10;
-    if (val > 200) return 5;
-    return 0;
+    // Range: 300 kcal (0 pts) -> 700 kcal (30 pts)
+    return linearScore(val, 300, 700, 30);
 }
 
 function calculateSugarScore(val) {
-    // > 50g is huge
-    if (val > 40) return 30;
-    if (val > 30) return 25;
-    if (val > 20) return 20;
-    if (val > 10) return 15;
-    if (val > 5) return 5;
-    return 0;
+    // Range: 5g (0 pts) -> 40g (40 pts)
+    return linearScore(val, 5, 40, 40);
 }
 
 function calculateSaturatedFatScore(val) {
-    if (val > 12) return 35;
-    if (val > 10) return 25;
-    if (val > 7) return 20;
-    if (val > 4) return 15;
-    if (val > 2) return 5;
-    return 0;
+    // Range: 1g (0 pts) -> 12g (35 pts)
+    return linearScore(val, 1, 12, 35);
 }
 
 function calculateSodiumScore(val) {
-    // Sodium in g. Salt = Sodium * 2.5
-    if (val > 2) return 35; // Very salty
-    if (val > 1) return 25;
-    if (val > 0.5) return 10;
-    if (val > 0.2) return 5;
-    return 0;
+    // Range: 0.2g (0 pts) -> 2g (35 pts)
+    return linearScore(val, 0.2, 2, 35);
 }
 
 // Helpers - These return "Bonus points" (positive numbers to be added)
