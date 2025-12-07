@@ -46,12 +46,12 @@ export const calculateScore = (product) => {
     // Wait, Nutri-Score is complex. Let's use a simplified heuristic for this MVP.
 
     // Heuristic:
-    // Start at 80.
+    // Start at 100.
     // Subtract for bad stuff.
     // Add for good stuff.
     // Clamp between 0 and 100.
 
-    let rawScore = 90;
+    let rawScore = 100;
 
     rawScore -= energyScore;
     rawScore -= sugarScore;
@@ -85,7 +85,7 @@ function calculateEnergyScore(val) {
     // > 800 kcal is very high. 
     if (val > 700) return 30;
     if (val > 500) return 20;
-    if (val > 350) return 15;
+    if (val > 360) return 15; // Adjusted for dry pasta/grains (usually ~350-360)
     if (val > 250) return 10;
     if (val > 200) return 5;
     return 0;
