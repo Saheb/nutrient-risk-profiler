@@ -20,7 +20,7 @@ The Nutrient Risk Profiler calculates a health score from **0 (Poor)** to **100 
 
 ### How it Works
  
-The score starts at a **Base of 90** and is adjusted based on the nutritional content per 100g:
+The score starts at a **Base of 100** and is adjusted based on the nutritional content per 100g:
  
 #### 1. Negative Factors (Penalties)
 Points are subtracted for nutrients that should be limited:
@@ -37,7 +37,7 @@ Points are added for beneficial nutrients:
 - **Fruits, Vegetables, & Nuts**: Up to +15 points (> 80%).
  
 #### 3. Final Score
-The final score is calculated as `Base (90) - Penalties + Bonuses`, clamped between 0 and 100.
+The final score is calculated as `Base (100) - Penalties + Bonuses`, clamped between 0 and 100.
  
 | Score Range | Risk Level | Color |
 | :--- | :--- | :--- |

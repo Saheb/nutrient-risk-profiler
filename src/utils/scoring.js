@@ -85,7 +85,7 @@ function calculateEnergyScore(val) {
     // > 800 kcal is very high. 
     if (val > 700) return 30;
     if (val > 500) return 20;
-    if (val > 360) return 15; // Adjusted for dry pasta/grains (usually ~350-360)
+    if (val > 400) return 15; // Adjusted to 400kcal (Medium density upper bound)
     if (val > 250) return 10;
     if (val > 200) return 5;
     return 0;
