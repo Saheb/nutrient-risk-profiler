@@ -16,7 +16,7 @@ const ShareModal = ({ isOpen, onClose, product, score, scoreLabel, onDownload, o
                     const file = new File([blob], 'analysis.png', { type: 'image/png' });
                     const shareData = {
                         title: `Nutrient Risk Profiler: ${product.product_name}`,
-                        text: shareText,
+                        text: shareText + '\n\n' + shareUrl, // Append URL to text (Caption) for better WhatsApp support
                         url: shareUrl,
                         files: [file]
                     };
