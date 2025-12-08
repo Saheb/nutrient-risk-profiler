@@ -59,11 +59,14 @@ The final score is calculated as `Base (100) - Penalties + Bonuses`, clamped bet
 
 2.  **Start Dev Server**:
     ```bash
-    npm run dev
+    ```bash
+    npm run dev:worker
     ```
+    *(Or `npm run dev` for frontend-only mode)*
 
 3.  **Open Browser**:
-    Navigate to `http://localhost:5173`
+    - For `dev:worker`: Navigate to `http://localhost:8788`
+    - For `dev`: Navigate to `http://localhost:5173`
 
 ## Tech Stack
 
