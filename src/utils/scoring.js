@@ -39,7 +39,13 @@ export const calculateScore = (product) => {
     // Positive factors (Higher is better) - Max bonus 15 points each
     const fiberScore = calculateFiberScore(nutriments['fiber_100g'] || 0);
     const proteinScore = calculateProteinScore(nutriments['proteins_100g'] || 0);
-    const fruitVegScore = calculateFruitVegScore(nutriments['fruits-vegetables-nuts-estimate-from-ingredients_100g'] || 0);
+
+    // "Sugar Trap" Rule: If sugar is high (> 30g), disable the fruit/veg bonus.
+    // This prevents sugary snacks (like dried fruit mixes) from scoring artificially high.
+    let fruitVegScore = 0;
+    if ((nutriments['sugars_100g'] || 0) <= 30) {
+        fruitVegScore = calculateFruitVegScore(nutriments['fruits-vegetables-nuts-estimate-from-ingredients_100g'] || 0);
+    }
 
     // Base calculation: Start at 50? Or sum up?
     // Let's use a simpler approach: Start at 100 and subtract penalties.
@@ -95,8 +101,9 @@ function calculateEnergyScore(val) {
 }
 
 function calculateSugarScore(val) {
-    // Range: 5g (0 pts) -> 40g (40 pts)
-    return linearScore(val, 5, 40, 40);
+    // Range: 5g (0 pts) -> 50g (70 pts)
+    // Extended range to 50g to allow differentiation at high levels
+    return linearScore(val, 5, 50, 70);
 }
 
 function calculateSaturatedFatScore(val) {
