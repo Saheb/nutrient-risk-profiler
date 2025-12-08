@@ -61,7 +61,7 @@ const BarcodeScanner = ({ onScanSuccess, onClose }) => {
                     (decodedText, decodedResult) => {
                         // Validate barcode before accepting
                         if (isValidBarcode(decodedText)) {
-                            console.log(`Valid scan result: ${decodedText}`, decodedResult);
+                            // console.log(`Valid scan result: ${decodedText}`, decodedResult);
                             onScanSuccess(decodedText);
 
                             // Stop on success

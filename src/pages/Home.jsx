@@ -129,15 +129,23 @@ const Home = () => {
             </div>
 
             {/* Global Stats Footer */}
-            <div className="mt-8 flex items-center justify-center gap-6 text-muted-foreground/60">
-                <div className="flex items-center gap-2">
-                    <ThumbsUp className="h-4 w-4" />
-                    <span className="text-xs font-medium">{globalStats.up} helpful votes</span>
+            <div className="mt-8 flex flex-col items-center justify-center gap-4 text-muted-foreground/60">
+                <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2">
+                        <ThumbsUp className="h-4 w-4" />
+                        <span className="text-xs font-medium">{globalStats.up} helpful votes</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <ThumbsDown className="h-4 w-4" />
+                        <span className="text-xs font-medium">{globalStats.down} unhelpful votes</span>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <ThumbsDown className="h-4 w-4" />
-                    <span className="text-xs font-medium">{globalStats.down} unhelpful votes</span>
-                </div>
+                <a
+                    href="mailto:saheb37@duck.com?subject=Nutrient Profiler Feedback"
+                    className="text-xs hover:underline hover:text-blue-500 transition-colors"
+                >
+                    Report a Bug / Feedback
+                </a>
             </div>
 
             <InstallPrompt />

@@ -10,14 +10,14 @@ export const extractNutritionFromImage = async (imageData) => {
             processedImage,
             'eng',
             {
-                logger: m => console.log(m), // Optional: log progress
+                // logger: m => console.log(m), // Optional: log progress
                 tessedit_char_whitelist: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,gmkcal%()/', // Only allow relevant chars
                 tessedit_pageseg_mode: '6', // PSM 6: Assume a single uniform block of text
             }
         );
 
         const text = result.data.text;
-        console.log("OCR Extracted Text:", text);
+        // console.log("OCR Extracted Text:", text);
 
         return parseNutritionText(text);
     } catch (error) {
@@ -85,7 +85,7 @@ const parseNutritionText = (text) => {
     // Looks for: Keyword -> (optional non-digits) -> Number -> (optional decimal/space) -> Number
     const findValue = (regex, fieldName) => {
         const match = text.match(regex);
-        console.log(`Searching for ${fieldName}:`, regex, "Match:", match ? match[2] : "null");
+        // console.log(`Searching for ${fieldName}:`, regex, "Match:", match ? match[2] : "null");
 
         if (match && match[2]) {
             let value = match[2];
@@ -143,6 +143,6 @@ const parseNutritionText = (text) => {
     });
 
     extracted.raw_text = text; // Include raw text for debugging
-    console.log("Final Extracted Data:", extracted);
+    // console.log("Final Extracted Data:", extracted);
     return extracted;
 };

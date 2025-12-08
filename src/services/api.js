@@ -10,13 +10,13 @@ export const searchProducts = async (query) => {
     const cacheKey = `search_${trimmedQuery.toLowerCase()}`;
     const cachedResult = localCache.get(cacheKey);
     if (cachedResult) {
-        console.log("Serving from local cache:", trimmedQuery);
+        // console.log("Serving from local cache:", trimmedQuery);
         return cachedResult;
     }
 
     // 2. Check if query is a barcode (8-14 digits)
     if (/^\d{8,14}$/.test(trimmedQuery)) {
-        console.log("Detected barcode, fetching product directly:", trimmedQuery);
+        // console.log("Detected barcode, fetching product directly:", trimmedQuery);
         const product = await getProductByBarcode(trimmedQuery);
         if (product) {
             const results = [product];

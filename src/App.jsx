@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Link } from 'react-router-dom';
 import Home from './pages/Home';
 import ProductPage from './pages/ProductPage';
 import AddProduct from './pages/AddProduct';
@@ -9,7 +9,9 @@ function App() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col items-center p-4">
       <header className="w-full max-w-md py-6 flex flex-col items-center">
-        <h1 className="text-3xl font-bold tracking-tight text-primary mb-2">Nutrient Risk Profiler</h1>
+        <Link to="/" className="text-center group">
+          <h1 className="text-3xl font-bold tracking-tight text-primary mb-2 group-hover:text-primary/90 transition-colors">Nutrient Risk Profiler</h1>
+        </Link>
         <p className="text-muted-foreground text-center">Instantly check the risk profile of food items.</p>
       </header>
 
