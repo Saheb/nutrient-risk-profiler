@@ -38,7 +38,13 @@ export const calculateScore = (product) => {
 
     // Positive factors (Higher is better) - Max bonus 15 points each
     const fiberScore = calculateFiberScore(nutriments['fiber_100g'] || 0);
-    const proteinScore = calculateProteinScore(nutriments['proteins_100g'] || 0);
+    let proteinScore = calculateProteinScore(nutriments['proteins_100g'] || 0);
+
+    // "Dirty Bulk" Penalty: If Saturated Fat > 10g OR Sugars > 20g, reduce Protein Bonus by 50%.
+    // This prevents sugary protein bars or fatty snacks from scoring too high purely on protein.
+    if ((nutriments['saturated-fat_100g'] || 0) > 10 || (nutriments['sugars_100g'] || 0) > 20) {
+        proteinScore = Math.round(proteinScore * 0.5);
+    }
 
     // "Sugar Trap" Rule: If sugar is high (> 30g), disable the fruit/veg bonus.
     // This prevents sugary snacks (like dried fruit mixes) from scoring artificially high.
