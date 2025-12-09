@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Loader2, ScanBarcode } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import BarcodeScanner from './BarcodeScanner';
 
 const SearchBar = ({ onSearch, isLoading, showScanner, setShowScanner }) => {
@@ -34,14 +34,7 @@ const SearchBar = ({ onSearch, isLoading, showScanner, setShowScanner }) => {
                     />
                     <div className="absolute right-4 flex items-center gap-2">
                         {!isLoading && (
-                            <button
-                                type="button"
-                                onClick={() => setShowScanner(true)}
-                                className="p-1 hover:bg-secondary rounded-full transition-colors text-muted-foreground hover:text-foreground"
-                                title="Scan Barcode"
-                            >
-                                <ScanBarcode className="h-5 w-5" />
-                            </button>
+                            <div className="w-1" />
                         )}
                         {isLoading ? (
                             <Loader2 className="h-5 w-5 animate-spin text-primary" />

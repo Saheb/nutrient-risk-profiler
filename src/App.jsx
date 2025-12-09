@@ -5,9 +5,12 @@ import ProductPage from './pages/ProductPage';
 import AddProduct from './pages/AddProduct';
 import QuickScan from './pages/QuickScan';
 
+import ReloadPrompt from './components/ReloadPrompt';
+
 function App() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col items-center p-4">
+      <ReloadPrompt />
       <header className="w-full max-w-md py-6 flex flex-col items-center">
         <Link to="/" className="text-center group">
           <h1 className="text-3xl font-bold tracking-tight text-primary mb-2 group-hover:text-primary/90 transition-colors">Nutrient Risk Profiler</h1>

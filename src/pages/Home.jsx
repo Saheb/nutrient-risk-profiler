@@ -73,6 +73,14 @@ const Home = () => {
             </button>
 
             <div className="flex flex-col gap-3">
+                {products.length === 0 && (
+                    <div className="w-full p-4 border rounded-lg shadow-sm bg-card mb-4">
+                        <p className="text-center text-muted-foreground">
+                            <span className="block font-medium mb-1">Scanning a barcode is faster!</span>
+                            <span className="text-xs opacity-80">Text search is slower and less accurate.</span>
+                        </p>
+                    </div>
+                )}
                 {isLoading ? (
                     <div className="text-center py-8 text-muted-foreground">Searching...</div>
                 ) : products.length > 0 ? (
@@ -95,9 +103,7 @@ const Home = () => {
                     </div>
                 ) : (
                     <>
-                        <div className="w-full p-4 border rounded-lg shadow-sm bg-card mb-4">
-                            <p className="text-center text-muted-foreground">Search for a product to begin...</p>
-                        </div>
+
                         {recentProducts.length > 0 && (
                             <div className="flex flex-col gap-3">
                                 <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider px-1">
