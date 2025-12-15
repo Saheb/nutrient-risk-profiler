@@ -59,7 +59,6 @@ The final score is calculated as `Base (100) - Penalties + Bonuses`, clamped bet
 
 2.  **Start Dev Server**:
     ```bash
-    ```bash
     npm run dev:worker
     ```
     *(Or `npm run dev` for frontend-only mode)*

@@ -75,11 +75,40 @@ export const calculateScore = (product) => {
     rawScore += fruitVegScore;
 
     // 2. Additives Penalty
-    // OpenFoodFacts provides 'additives_n' (number of additives) and 'additives_tags' (risk levels).
-    // We'll penalize based on count and risk.
+    // Refined logic: Base penalty on count + specific penalty for high-risk additives.
+    // Since we don't have a full risk database, we'll use a known list of high-risk additives
+    // and falling back to a default penalty for unknown ones if tags are present.
+
+    let additivesPenalty = 0;
     const additivesCount = product.additives_n || 0;
-    // Simple penalty: 3 points per additive (capped at 30)
-    const additivesPenalty = Math.min(additivesCount * 3, 30);
+    const additivesTags = product.additives_tags || [];
+
+    // Base penalty: 1 point per additive (to discourage highly processed foods)
+    additivesPenalty += additivesCount * 1;
+
+    // Specific Risk Penalty (Heuristic)
+    // Common high-risk additives (Nitrites, BHA/BHT, some colors)
+    const highRiskAdditives = [
+        'en:e250', 'en:e251', 'en:e252', // Nitrites/Nitrates
+        'en:e320', 'en:e321', // BHA, BHT
+        'en:e102', 'en:e110', 'en:e129', 'en:e133', // Artificial Colors
+        'en:e171', // Titanium Dioxide
+        'en:e950', 'en:e951', 'en:e954', // Artificial Sweeteners (Aspartame, Acesulfame K, Saccharin) -> Debated, but penalized in some systems
+        'en:e621', // MSG (often penalized)
+        'en:e407', // Carrageenan
+        'en:e338', 'en:e339', 'en:e340', 'en:e341', 'en:e450', 'en:e451', 'en:e452' // Phosphates
+    ];
+
+    additivesTags.forEach(tag => {
+        if (highRiskAdditives.includes(tag)) {
+            additivesPenalty += 5; // Extra 5 points for high risk
+        } else {
+            additivesPenalty += 2; // Extra 2 points for other additives (total 3 per additive)
+        }
+    });
+
+    // Cap penalty at 40 points
+    additivesPenalty = Math.min(additivesPenalty, 40);
 
     rawScore -= additivesPenalty;
 

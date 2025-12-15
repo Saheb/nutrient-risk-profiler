@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Share2, Download, ThumbsUp, ThumbsDown, ExternalLink, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Share2, Download, ThumbsUp, ThumbsDown, ExternalLink, Copy, Check, AlertTriangle } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import * as htmlToImage from 'html-to-image';
 import { calculateScore, getScoreLabel, getNutrientLevel } from '../utils/scoring';
@@ -174,6 +174,20 @@ const ProductDetails = ({ product, onBack }) => {
                 </div>
 
                 <div className="p-4 flex flex-col gap-5">
+                    {/* Data Quality Warning */}
+                    {(product.states_tags?.includes('en:ingredients-to-be-completed') || !product.ingredients_text) && (
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+                            <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                            <div className="text-sm text-amber-800">
+                                <p className="font-medium">Incomplete Product Data</p>
+                                <p className="text-xs opacity-90 mt-0.5">
+                                    Ingredients are missing for this product.
+                                    The Nutri-Risk score may be inaccurate as it cannot account for additives or specific ingredients.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Top Section: Horizontal Layout */}
                     <div className="flex items-start gap-4">
                         {/* Product Image */}
@@ -228,7 +242,20 @@ const ProductDetails = ({ product, onBack }) => {
                         <div className="grid grid-cols-3 gap-2">
                             <NutrientBox label="Kcal" value={product.nutriments?.['energy-kcal_100g']} unit="" />
                             <NutrientBox label="Protein" value={product.nutriments?.proteins_100g} unit="g" nutrientType="protein" />
-                            <NutrientBox label="Sodium" value={product.nutriments?.sodium_100g} unit="g" nutrientType="sodium" />
+                            <NutrientBox
+                                label="Sodium"
+                                value={
+                                    (product.nutriments?.sodium_100g < 1 && product.nutriments?.sodium_100g > 0)
+                                        ? product.nutriments?.sodium_100g * 1000
+                                        : product.nutriments?.sodium_100g
+                                }
+                                unit={
+                                    (product.nutriments?.sodium_100g < 1 && product.nutriments?.sodium_100g > 0)
+                                        ? "mg"
+                                        : "g"
+                                }
+                                nutrientType="sodium"
+                            />
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                             <NutrientBox label="Carbs" value={product.nutriments?.carbohydrates_100g} unit="g" />
