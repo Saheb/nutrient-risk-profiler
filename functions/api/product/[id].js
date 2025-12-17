@@ -27,8 +27,19 @@ export async function onRequestGet(context) {
     }
 
     // 2. Fetch from OpenFoodFacts
+    // Use staging for local development, production for deployed
+    const requestUrl = new URL(context.request.url);
+    const isLocalDev = requestUrl.hostname === 'localhost' || requestUrl.hostname === '127.0.0.1';
+    const OFF_BASE = isLocalDev
+        ? 'https://world.openfoodfacts.net'  // Staging
+        : 'https://world.openfoodfacts.org'; // Production
+
     try {
-        const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${id}.json`);
+        const response = await fetch(`${OFF_BASE}/api/v0/product/${id}.json`, {
+            headers: {
+                'User-Agent': 'NutriRiskProfiler/1.0 (https://nutrient-risk-profiler.pages.dev)'
+            }
+        });
 
         if (!response.ok) {
             throw new Error('Upstream API error');

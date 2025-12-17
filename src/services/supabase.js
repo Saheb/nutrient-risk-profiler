@@ -39,7 +39,29 @@ export const localCache = {
             };
             localStorage.setItem(key, JSON.stringify(item));
         } catch (e) {
-            console.error("Local cache set failed", e);
+            // Quota exceeded - clear old search cache entries and retry
+            if (e.name === 'QuotaExceededError') {
+                console.warn('LocalStorage quota exceeded, clearing old search cache...');
+                // Remove all search_* entries
+                const keysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (k && k.startsWith('search_')) {
+                        keysToRemove.push(k);
+                    }
+                }
+                keysToRemove.forEach(k => localStorage.removeItem(k));
+
+                // Retry once after clearing
+                try {
+                    const item = { value, timestamp: Date.now() };
+                    localStorage.setItem(key, JSON.stringify(item));
+                } catch (retryError) {
+                    console.warn('LocalStorage still full after clearing search cache');
+                }
+            } else {
+                console.error("Local cache set failed", e);
+            }
         }
     }
 };

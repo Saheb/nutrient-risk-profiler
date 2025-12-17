@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { calculateScore, getScoreColor } from '../utils/scoring';
 
-const ProductCard = ({ product, onClick }) => {
-    const score = calculateScore(product);
-    const scoreColorClass = getScoreColor(score);
+const ProductCard = React.memo(({ product, onClick }) => {
+    // Memoize score calculation to avoid recalculating on every render
+    const score = useMemo(() => calculateScore(product), [product]);
+    const scoreColorClass = useMemo(() => getScoreColor(score), [score]);
 
     return (
         <div
@@ -16,6 +17,7 @@ const ProductCard = ({ product, onClick }) => {
                         src={product.image_url}
                         alt={product.product_name}
                         className="h-full w-full object-cover"
+                        loading="lazy"
                     />
                 ) : (
                     <div className="h-full w-full flex items-center justify-center text-muted-foreground text-xs">
@@ -35,6 +37,9 @@ const ProductCard = ({ product, onClick }) => {
             </div>
         </div>
     );
-};
+});
+
+ProductCard.displayName = 'ProductCard';
 
 export default ProductCard;
+

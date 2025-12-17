@@ -4,6 +4,8 @@ import { Helmet } from 'react-helmet-async';
 import * as htmlToImage from 'html-to-image';
 import { calculateScore, getScoreLabel, getNutrientLevel } from '../utils/scoring';
 import ShareModal from './ShareModal';
+import ScoreBreakdown from './ScoreBreakdown';
+import { useFeedback } from '../hooks/useFeedback';
 
 const ProductDetails = ({ product, onBack }) => {
     if (!product) return null;
@@ -11,55 +13,15 @@ const ProductDetails = ({ product, onBack }) => {
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const score = calculateScore(product);
     const scoreLabel = getScoreLabel(score);
-    const [feedback, setFeedback] = useState({ up: 0, down: 0 });
-    const [userVote, setUserVote] = useState(null); // 'up', 'down', or null
     const [isCopied, setIsCopied] = useState(false);
+
+    // Use the custom feedback hook
+    const { feedback, userVote, voteUp, voteDown, hasVoted } = useFeedback(product?.code);
 
     const handleCopyCode = () => {
         navigator.clipboard.writeText(product.code);
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
-    };
-
-    // Load feedback on mount
-    React.useEffect(() => {
-        if (product?.code) {
-            const loadFeedback = async () => {
-                try {
-                    const res = await fetch(`/api/feedback?id=${product.code}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        setFeedback(data);
-                    }
-                } catch (e) {
-                    console.error("Failed to load feedback", e);
-                }
-            };
-            loadFeedback();
-
-            // Check local storage for previous vote
-            const vote = localStorage.getItem(`vote_${product.code}`);
-            if (vote) setUserVote(vote);
-        }
-    }, [product?.code]);
-
-    const handleVote = async (type) => {
-        if (userVote) return; // Already voted
-
-        // Optimistic update
-        setFeedback(prev => ({ ...prev, [type]: prev[type] + 1 }));
-        setUserVote(type);
-        localStorage.setItem(`vote_${product.code}`, type);
-
-        try {
-            await fetch('/api/feedback', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: product.code, type })
-            });
-        } catch (e) {
-            console.error("Failed to submit vote", e);
-        }
     };
 
     // Determine colors based on score
@@ -282,6 +244,9 @@ const ProductDetails = ({ product, onBack }) => {
                         </div>
                     </div>
 
+                    {/* Score Breakdown */}
+                    <ScoreBreakdown product={product} />
+
                     {/* Ingredients */}
                     {product.ingredients_text && (
                         <div className="w-full space-y-1.5 bg-background/50 p-3 rounded-lg border border-border/50">
@@ -331,8 +296,8 @@ const ProductDetails = ({ product, onBack }) => {
                 <p className="text-xs font-medium text-muted-foreground">Was this analysis helpful?</p>
                 <div className="flex items-center gap-4">
                     <button
-                        onClick={() => handleVote('up')}
-                        disabled={!!userVote}
+                        onClick={voteUp}
+                        disabled={hasVoted}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all ${userVote === 'up'
                             ? 'bg-green-500/10 border-green-500 text-green-600'
                             : 'bg-background border-border hover:bg-secondary'
@@ -342,8 +307,8 @@ const ProductDetails = ({ product, onBack }) => {
                         <span className="text-xs font-semibold">{feedback.up}</span>
                     </button>
                     <button
-                        onClick={() => handleVote('down')}
-                        disabled={!!userVote}
+                        onClick={voteDown}
+                        disabled={hasVoted}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all ${userVote === 'down'
                             ? 'bg-red-500/10 border-red-500 text-red-600'
                             : 'bg-background border-border hover:bg-secondary'

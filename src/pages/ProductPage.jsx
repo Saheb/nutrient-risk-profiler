@@ -16,12 +16,12 @@ const ProductPage = () => {
             if (!id) return;
             setLoading(true);
             try {
-                const data = await getProductByBarcode(id);
-                if (data) {
-                    setProduct(data);
-                    saveRecentProduct(data);
+                const result = await getProductByBarcode(id);
+                if (result.success && result.data) {
+                    setProduct(result.data);
+                    saveRecentProduct(result.data);
                 } else {
-                    setError('Product not found');
+                    setError(result.error || 'Product not found');
                 }
             } catch (err) {
                 setError('Failed to load product');

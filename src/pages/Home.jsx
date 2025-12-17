@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ThumbsUp, ThumbsDown, Calculator, ScanBarcode } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Calculator, ScanBarcode, AlertCircle } from 'lucide-react';
 import { searchProducts } from '../services/api';
 import ProductCard from '../components/ProductCard';
 import SearchBar from '../components/SearchBar';
 import InstallPrompt from '../components/InstallPrompt';
+import { ProductListSkeleton } from '../components/SkeletonLoader';
 import { getRecentProducts } from '../utils/storage';
 
 const Home = () => {
@@ -12,6 +13,7 @@ const Home = () => {
     const [recentProducts, setRecentProducts] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
+    const [error, setError] = useState(null);
     const [globalStats, setGlobalStats] = useState({ up: 0, down: 0 });
     const [showScanner, setShowScanner] = useState(false);
     const navigate = useNavigate();
@@ -32,18 +34,26 @@ const Home = () => {
         setRecentProducts(getRecentProducts());
     }, []);
 
-    const handleSearch = async (query) => {
+    const handleSearch = useCallback(async (query) => {
         setIsLoading(true);
         setHasSearched(true);
+        setError(null);
         try {
-            const results = await searchProducts(query);
-            setProducts(results);
+            const result = await searchProducts(query);
+            if (result.success) {
+                setProducts(result.data);
+            } else {
+                setProducts([]);
+                setError(result.error || 'Search failed');
+            }
         } catch (error) {
             console.error("Search failed:", error);
+            setProducts([]);
+            setError('An unexpected error occurred');
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []);
 
     const handleProductClick = (product) => {
         const code = product.code || product._id || product.id;
@@ -73,7 +83,7 @@ const Home = () => {
             </button>
 
             <div className="flex flex-col gap-3">
-                {products.length === 0 && (
+                {products.length === 0 && !hasSearched && (
                     <div className="w-full p-4 border rounded-lg shadow-sm bg-card mb-4">
                         <p className="text-center text-muted-foreground">
                             <span className="block font-medium mb-1">Scanning a barcode is faster!</span>
@@ -81,8 +91,20 @@ const Home = () => {
                         </p>
                     </div>
                 )}
+
+                {/* Error Display */}
+                {error && (
+                    <div className="w-full p-4 border border-red-200 rounded-lg shadow-sm bg-red-50 mb-4 flex items-start gap-3">
+                        <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                        <div>
+                            <p className="text-red-700 font-medium">Search failed</p>
+                            <p className="text-red-600 text-sm">{error}</p>
+                        </div>
+                    </div>
+                )}
+
                 {isLoading ? (
-                    <div className="text-center py-8 text-muted-foreground">Searching...</div>
+                    <ProductListSkeleton count={3} />
                 ) : products.length > 0 ? (
                     products.map((product) => (
                         <ProductCard
@@ -91,7 +113,7 @@ const Home = () => {
                             onClick={handleProductClick}
                         />
                     ))
-                ) : hasSearched ? (
+                ) : hasSearched && !error ? (
                     <div className="text-center py-12">
                         <p className="text-gray-500 mb-4">No products found.</p>
                         <button

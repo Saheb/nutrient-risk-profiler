@@ -1,23 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Search, Loader2 } from 'lucide-react';
 import BarcodeScanner from './BarcodeScanner';
 
 const SearchBar = ({ onSearch, isLoading, showScanner, setShowScanner }) => {
     const [query, setQuery] = useState('');
-    // Internal state removed, using props
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (query.trim()) {
-            onSearch(query);
+        const trimmedQuery = query.trim();
+        if (trimmedQuery) {
+            onSearch(trimmedQuery);
         }
     };
 
-    const handleScanSuccess = (decodedText) => {
+    const handleScanSuccess = useCallback((decodedText) => {
         setQuery(decodedText);
         onSearch(decodedText);
         setShowScanner(false);
-    };
+    }, [onSearch, setShowScanner]);
 
     return (
         <>
@@ -28,24 +28,20 @@ const SearchBar = ({ onSearch, isLoading, showScanner, setShowScanner }) => {
                         type="text"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Search for a product (e.g., Maggi, Lays)..."
+                        placeholder="Search for a product, press Enter..."
                         className="w-full pl-12 pr-20 py-4 rounded-2xl border border-border bg-card text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200 placeholder:text-muted-foreground/70"
                         disabled={isLoading}
                     />
                     <div className="absolute right-4 flex items-center gap-2">
-                        {!isLoading && (
-                            <div className="w-1" />
-                        )}
                         {isLoading ? (
                             <Loader2 className="h-5 w-5 animate-spin text-primary" />
                         ) : (
                             <button
                                 type="submit"
-                                className="p-1 hover:bg-secondary rounded-full transition-colors"
-                                disabled={isLoading}
+                                className="p-2 hover:bg-secondary rounded-full transition-colors"
+                                disabled={isLoading || !query.trim()}
                             >
-                                <span className="sr-only">Search</span>
-                                <div className="h-2 w-2 rounded-full bg-primary/50" />
+                                <Search className="h-4 w-4 text-primary" />
                             </button>
                         )}
                     </div>
