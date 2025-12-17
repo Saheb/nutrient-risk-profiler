@@ -34,19 +34,20 @@ export const validateBarcode = (barcode) => {
  * @property {string} [error] - Error message if failed
  */
 
-export const searchProducts = async (query) => {
+export const searchProducts = async (query, country = '') => {
     const trimmedQuery = query.trim();
 
-    // 1. Check Cache
-    const cacheKey = `search_${trimmedQuery.toLowerCase()}`;
+    // Include country in cache key
+    const cacheKey = country
+        ? `search_${country}_${trimmedQuery.toLowerCase()}`
+        : `search_${trimmedQuery.toLowerCase()}`;
     const cachedResult = localCache.get(cacheKey);
     if (cachedResult) {
         return { success: true, data: cachedResult };
     }
 
-    // 2. Check if query is a barcode (8-14 digits)
+    // Check if query is a barcode (8-14 digits)
     if (/^\d{8,14}$/.test(trimmedQuery)) {
-        // Validate barcode checksum (warn but don't block)
         if (!validateBarcode(trimmedQuery)) {
             console.warn('Barcode failed checksum validation:', trimmedQuery);
         }
@@ -61,7 +62,12 @@ export const searchProducts = async (query) => {
     }
 
     try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(trimmedQuery)}`);
+        let apiUrl = `/api/search?q=${encodeURIComponent(trimmedQuery)}`;
+        if (country) {
+            apiUrl += `&country=${encodeURIComponent(country)}`;
+        }
+
+        const response = await fetch(apiUrl);
 
         if (!response.ok) {
             throw new Error(`Search failed: ${response.status} ${response.statusText}`);
@@ -72,7 +78,7 @@ export const searchProducts = async (query) => {
 
         localCache.set(cacheKey, products);
 
-        return { success: true, data: products };
+        return { success: true, data: products, detectedCountry: data.detectedCountry };
     } catch (error) {
         console.error("Error fetching products:", error);
         return {

@@ -7,6 +7,7 @@ import SearchBar from '../components/SearchBar';
 import InstallPrompt from '../components/InstallPrompt';
 import { ProductListSkeleton } from '../components/SkeletonLoader';
 import { getRecentProducts } from '../utils/storage';
+import CountrySelector, { getStoredCountry } from '../components/CountrySelector';
 
 const Home = () => {
     const [products, setProducts] = useState([]);
@@ -16,6 +17,8 @@ const Home = () => {
     const [error, setError] = useState(null);
     const [globalStats, setGlobalStats] = useState({ up: 0, down: 0 });
     const [showScanner, setShowScanner] = useState(false);
+    const [country, setCountry] = useState(getStoredCountry());
+    const [detectedCountry, setDetectedCountry] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -30,7 +33,27 @@ const Home = () => {
                 console.error("Failed to fetch global stats", e);
             }
         };
+
+        const fetchDetectedCountry = async () => {
+            try {
+                const res = await fetch('/api/country');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.country) {
+                        setDetectedCountry(data.country);
+                        // If no stored preference, use detected country as default
+                        if (!getStoredCountry()) {
+                            setCountry(data.country);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to fetch detected country", e);
+            }
+        };
+
         fetchStats();
+        fetchDetectedCountry();
         setRecentProducts(getRecentProducts());
     }, []);
 
@@ -39,9 +62,12 @@ const Home = () => {
         setHasSearched(true);
         setError(null);
         try {
-            const result = await searchProducts(query);
+            const result = await searchProducts(query, country);
             if (result.success) {
                 setProducts(result.data);
+                if (result.detectedCountry) {
+                    setDetectedCountry(result.detectedCountry);
+                }
             } else {
                 setProducts([]);
                 setError(result.error || 'Search failed');
@@ -53,7 +79,7 @@ const Home = () => {
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [country]);
 
     const handleProductClick = (product) => {
         const code = product.code || product._id || product.id;
@@ -81,6 +107,16 @@ const Home = () => {
                 <ScanBarcode size={20} />
                 Scan Barcode
             </button>
+
+            {/* Country Filter */}
+            <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Filter by country:</span>
+                <CountrySelector
+                    value={country}
+                    onChange={setCountry}
+                    detectedCountry={detectedCountry}
+                />
+            </div>
 
             <div className="flex flex-col gap-3">
                 {products.length === 0 && !hasSearched && (
