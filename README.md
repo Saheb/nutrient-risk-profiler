@@ -26,7 +26,7 @@ The score starts at a **Base of 100** and is adjusted based on the nutritional c
 Points are subtracted for nutrients that should be limited:
 - **Energy (Calories)**: Linear penalty from 0 pts (300 kcal) to 30 pts (700 kcal).
 - **Sugars**: Linear penalty from 0 pts (5g) to 70 pts (50g).
-- **Saturated Fat**: Linear penalty from 0 pts (1g) to 35 pts (12g).
+- **Saturated Fat**: Linear penalty from 0 pts (1g) to 50 pts (10g).
 - **Sodium**: Linear penalty from 0 pts (0.2g) to 35 pts (2g).
 
 > **Note**: If sugar content is high (> 30g), the Fruit/Vegetable bonus is disabled to prevent sugary snacks from scoring artificially high.
@@ -61,16 +61,33 @@ The final score is calculated as `Base (100) - Penalties + Bonuses`, clamped bet
     ```bash
     npm run dev:worker
     ```
-    *(Or `npm run dev` for frontend-only mode)*
 
-3.  **Open Browser**:
-    - For `dev:worker`: Navigate to `http://localhost:8788`
-    - For `dev`: Navigate to `http://localhost:5173`
+## Available Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Frontend-only dev server (port 5173) |
+| `npm run dev:worker` | Full stack with Cloudflare Workers (port 8788) |
+| `npm run dev:fresh` | Clear cache + start fresh dev server |
+| `npm run cache:clear` | Clear server KV cache only |
+| `npm run build` | Production build |
+| `npm run test` | Run unit tests |
 
 ## Tech Stack
 
-- React
+- React 19
 - Vite
 - TailwindCSS
+- Cloudflare Workers (API proxy)
 - OpenFoodFacts API
 
+## API Rate Limits
+
+OpenFoodFacts has rate limits to be aware of:
+
+| Endpoint | Limit | Usage |
+|----------|-------|-------|
+| Product lookup (barcode) | 100 req/min | Barcode scans, pasting codes |
+| Search | 10 req/min | Text search queries |
+
+> **Tip**: Barcode scanning/pasting is preferred over text search for both accuracy and rate limits.

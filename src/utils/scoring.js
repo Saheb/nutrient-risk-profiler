@@ -142,8 +142,10 @@ function calculateSugarScore(val) {
 }
 
 function calculateSaturatedFatScore(val) {
-    // Range: 1g (0 pts) -> 12g (35 pts)
-    return linearScore(val, 1, 12, 35);
+    // Range: 1g (0 pts) -> 10g (50 pts)
+    // Very high penalty - saturated fat is a major health concern
+    // 10g sat fat = 50% daily value, should heavily penalize
+    return linearScore(val, 1, 10, 50);
 }
 
 function calculateSodiumScore(val) {

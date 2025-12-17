@@ -75,11 +75,8 @@ export async function onRequestGet(context) {
         console.warn('KV Cache Error:', err);
     }
 
-    // Use staging for local development, production for deployed
-    const isLocalDev = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
-    const OFF_BASE = isLocalDev
-        ? 'https://world.openfoodfacts.net'  // Staging
-        : 'https://world.openfoodfacts.org'; // Production
+    // Always use production - staging data is outdated
+    const OFF_BASE = 'https://world.openfoodfacts.org';
     const OFF_API_URL = `${OFF_BASE}/cgi/search.pl`;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);

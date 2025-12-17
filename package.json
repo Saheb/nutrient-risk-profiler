@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "dev:worker": "npm run build && npx wrangler pages dev dist",
+    "dev:fresh": "npm run cache:clear && npm run dev:worker",
+    "cache:clear": "rm -rf .wrangler/state && echo '✅ Server KV cache cleared!'",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",

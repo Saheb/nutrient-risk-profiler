@@ -26,13 +26,8 @@ export async function onRequestGet(context) {
         console.warn('KV Cache Error:', err);
     }
 
-    // 2. Fetch from OpenFoodFacts
-    // Use staging for local development, production for deployed
-    const requestUrl = new URL(context.request.url);
-    const isLocalDev = requestUrl.hostname === 'localhost' || requestUrl.hostname === '127.0.0.1';
-    const OFF_BASE = isLocalDev
-        ? 'https://world.openfoodfacts.net'  // Staging
-        : 'https://world.openfoodfacts.org'; // Production
+    // 2. Fetch from OpenFoodFacts (always use production - staging data is outdated)
+    const OFF_BASE = 'https://world.openfoodfacts.org';
 
     try {
         const response = await fetch(`${OFF_BASE}/api/v0/product/${id}.json`, {
