@@ -33,7 +33,8 @@ export const calculateScore = (product) => {
     // Negative factors (Lower is better) - Max penalty 40 points each
     const energyScore = calculateEnergyScore(nutriments['energy-kcal_100g'] || 0);
     const sugarScore = calculateSugarScore(nutriments['sugars_100g'] || 0);
-    const fatScore = calculateSaturatedFatScore(nutriments['saturated-fat_100g'] || 0);
+    const saturatedFatScore = calculateSaturatedFatScore(nutriments['saturated-fat_100g'] || 0);
+    const totalFatScore = calculateTotalFatScore(nutriments['fat_100g'] || 0);
     const sodiumScore = calculateSodiumScore(nutriments['sodium_100g'] || 0);
 
     // Positive factors (Higher is better) - Max bonus 15 points each
@@ -67,7 +68,8 @@ export const calculateScore = (product) => {
 
     rawScore -= energyScore;
     rawScore -= sugarScore;
-    rawScore -= fatScore;
+    rawScore -= saturatedFatScore;
+    rawScore -= totalFatScore;
     rawScore -= sodiumScore;
 
     rawScore += fiberScore;
@@ -131,14 +133,20 @@ function linearScore(val, minVal, maxVal, maxPoints) {
 }
 
 function calculateEnergyScore(val) {
-    // Range: 300 kcal (0 pts) -> 700 kcal (30 pts)
-    return linearScore(val, 300, 700, 30);
+    // Range: 300 kcal (0 pts) -> 700 kcal (40 pts)
+    return linearScore(val, 300, 700, 40);
 }
 
 function calculateSugarScore(val) {
     // Range: 5g (0 pts) -> 50g (70 pts)
     // Extended range to 50g to allow differentiation at high levels
     return linearScore(val, 5, 50, 70);
+}
+
+function calculateTotalFatScore(val) {
+    // Range: 5g (0 pts) -> 35g (30 pts)
+    // Penalize high total fat usage, especially for snacks
+    return linearScore(val, 5, 35, 30);
 }
 
 function calculateSaturatedFatScore(val) {

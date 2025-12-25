@@ -24,14 +24,14 @@ The score starts at a **Base of 100** and is adjusted based on the nutritional c
  
 #### 1. Negative Factors (Penalties)
 Points are subtracted for nutrients that should be limited:
-- **Energy (Calories)**: Linear penalty from 0 pts (300 kcal) to 30 pts (700 kcal).
+- **Energy (Calories)**: Linear penalty from 0 pts (300 kcal) to 40 pts (700 kcal).
 - **Sugars**: Linear penalty from 0 pts (5g) to 70 pts (50g).
+- **Total Fat**: Linear penalty from 0 pts (5g) to 30 pts (35g).
 - **Saturated Fat**: Linear penalty from 0 pts (1g) to 50 pts (10g).
 - **Sodium**: Linear penalty from 0 pts (0.2g) to 35 pts (2g).
+- **Additives**: 1 point per additive + additional penalties for high-risk additives (e.g., Nitrites, Artificial Colors). Max penalty 40 pts.
 
 > **Note**: If sugar content is high (> 30g), the Fruit/Vegetable bonus is disabled to prevent sugary snacks from scoring artificially high.
-- **Sodium**: Up to -35 points for high sodium (> 2g).
-- **Additives**: -3 points per additive (capped at -30 points).
  
 #### 2. Positive Factors (Bonuses)
 Points are added for beneficial nutrients:
