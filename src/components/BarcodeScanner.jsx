@@ -46,10 +46,6 @@ const BarcodeScanner = ({ onScanSuccess, onClose }) => {
                 aspectRatio: 1.0,
                 useBarCodeDetectorIfSupported: true, // Use native OS scanner if available (huge perf boost on iOS)
                 videoConstraints: {
-                    // Set ideal resolution to avoid 4K processing overhead
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 },
-                    focusMode: "continuous",
                     facingMode: "environment"
                 }
             };
@@ -99,7 +95,20 @@ const BarcodeScanner = ({ onScanSuccess, onClose }) => {
             } catch (err) {
                 if (isMounted) {
                     console.error("Failed to start scanner", err);
-                    setError("Failed to start camera. Please ensure camera permissions are granted.");
+                    // Show specific error message for better debugging
+                    let errorMessage = "Failed to start camera.";
+                    if (err?.name === 'NotAllowedError') {
+                        errorMessage = "Camera permission denied. Please allow camera access in your browser settings.";
+                    } else if (err?.name === 'NotFoundError') {
+                        errorMessage = "No camera found on your device.";
+                    } else if (err?.name === 'NotReadableError') {
+                        errorMessage = "Camera is already in use by another app or tab.";
+                    } else if (err?.name === 'OverconstrainedError') {
+                        errorMessage = "Camera does not support the requested resolution/features.";
+                    } else if (err) {
+                        errorMessage = `Camera Error: ${err.message || err}`;
+                    }
+                    setError(errorMessage);
                     setIsScanning(false);
                 }
             }
