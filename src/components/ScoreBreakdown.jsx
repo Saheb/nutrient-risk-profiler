@@ -9,10 +9,7 @@ import {
     HIGH_RISK_ADDITIVES
 } from '../utils/constants';
 
-/**
 import { calculateDetailedScore } from '../utils/scoring';
-// BASE_SCORE is no longer directly used in this file, as it's handled by calculateDetailedScore
-// import { BASE_SCORE } from '../utils/constants'; 
 
 /**
  * ScoreBreakdown component - shows how the score was calculated
