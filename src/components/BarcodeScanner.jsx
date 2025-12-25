@@ -42,8 +42,8 @@ const BarcodeScanner = ({ onScanSuccess, onClose }) => {
 
             const config = {
                 fps: 25, // Higher FPS for smoother feel (was 15)
-                qrbox: { width: 300, height: 150 }, // Rectangular box matches barcodes better
-                aspectRatio: 1.0,
+                qrbox: { width: 280, height: 250 }, // Taller box to easier fit barcodes
+                // aspectRatio: 1.0, // Let the camera decide the best aspect ratio
                 useBarCodeDetectorIfSupported: true, // Use native OS scanner if available (huge perf boost on iOS)
                 videoConstraints: {
                     facingMode: "environment"
