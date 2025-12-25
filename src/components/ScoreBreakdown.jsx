@@ -10,146 +10,18 @@ import {
 } from '../utils/constants';
 
 /**
- * Calculates the detailed score breakdown for a product.
- * Returns both the final score and an array of adjustments.
- * 
- * @param {Object} product - Product data from OpenFoodFacts API
- * @returns {Object|null} Score breakdown with adjustments
+import { calculateDetailedScore } from '../utils/scoring';
+// BASE_SCORE is no longer directly used in this file, as it's handled by calculateDetailedScore
+// import { BASE_SCORE } from '../utils/constants'; 
+
+/**
+ * ScoreBreakdown component - shows how the score was calculated
+ * Now uses the centralized logic from scoring.js for robustness.
  */
-export const calculateScoreBreakdown = (product) => {
-    if (!product || !product.nutriments) return null;
-
-    const nutriments = product.nutriments;
-    const adjustments = [];
-    let runningScore = BASE_SCORE;
-
-    // Helper to add adjustment
-    const addAdjustment = (label, value, points, type) => {
-        if (points !== 0) {
-            adjustments.push({
-                label,
-                value,
-                points,
-                type // 'penalty' or 'bonus'
-            });
-        }
-    };
-
-    // Energy penalty
-    const energy = nutriments['energy-kcal_100g'] || 0;
-    if (energy > SCORING_PENALTIES.energy.min) {
-        const pts = linearScore(energy, SCORING_PENALTIES.energy.min, SCORING_PENALTIES.energy.max, SCORING_PENALTIES.energy.maxPoints);
-        addAdjustment('Calories', `${Math.round(energy)} kcal`, -pts, 'penalty');
-        runningScore -= pts;
-    }
-
-    // Sugar penalty
-    const sugar = nutriments['sugars_100g'] || 0;
-    if (sugar > SCORING_PENALTIES.sugar.min) {
-        const pts = linearScore(sugar, SCORING_PENALTIES.sugar.min, SCORING_PENALTIES.sugar.max, SCORING_PENALTIES.sugar.maxPoints);
-        addAdjustment('Sugars', `${sugar.toFixed(1)}g`, -pts, 'penalty');
-        runningScore -= pts;
-    }
-
-    // Saturated fat penalty
-    const satFat = nutriments['saturated-fat_100g'] || 0;
-    if (satFat > SCORING_PENALTIES.saturatedFat.min) {
-        const pts = linearScore(satFat, SCORING_PENALTIES.saturatedFat.min, SCORING_PENALTIES.saturatedFat.max, SCORING_PENALTIES.saturatedFat.maxPoints);
-        addAdjustment('Saturated Fat', `${satFat.toFixed(1)}g`, -pts, 'penalty');
-        runningScore -= pts;
-    }
-
-    // Sodium penalty
-    const sodium = nutriments['sodium_100g'] || 0;
-    if (sodium > SCORING_PENALTIES.sodium.min) {
-        const pts = linearScore(sodium, SCORING_PENALTIES.sodium.min, SCORING_PENALTIES.sodium.max, SCORING_PENALTIES.sodium.maxPoints);
-        addAdjustment('Sodium', `${(sodium * 1000).toFixed(0)}mg`, -pts, 'penalty');
-        runningScore -= pts;
-    }
-
-    // Additives penalty
-    const additivesCount = product.additives_n || 0;
-    const additivesTags = product.additives_tags || [];
-    if (additivesCount > 0) {
-        let additivePenalty = additivesCount * SCORING_PENALTIES.additives.basePerAdditive;
-        let highRiskCount = 0;
-
-        additivesTags.forEach(tag => {
-            if (HIGH_RISK_ADDITIVES.includes(tag)) {
-                additivePenalty += SCORING_PENALTIES.additives.perHighRisk;
-                highRiskCount++;
-            } else {
-                additivePenalty += SCORING_PENALTIES.additives.perOther;
-            }
-        });
-
-        additivePenalty = Math.min(additivePenalty, SCORING_PENALTIES.additives.maxPoints);
-        addAdjustment(
-            'Additives',
-            highRiskCount > 0 ? `${additivesCount} (${highRiskCount} high-risk)` : `${additivesCount} additives`,
-            -additivePenalty,
-            'penalty'
-        );
-        runningScore -= additivePenalty;
-    }
-
-    // Fiber bonus
-    const fiber = nutriments['fiber_100g'] || 0;
-    for (const tier of SCORING_BONUSES.fiber.thresholds) {
-        if (fiber > tier.min) {
-            addAdjustment('Fiber', `${fiber.toFixed(1)}g`, tier.points, 'bonus');
-            runningScore += tier.points;
-            break;
-        }
-    }
-
-    // Protein bonus (with dirty bulk check)
-    const protein = nutriments['proteins_100g'] || 0;
-    let proteinBonus = 0;
-    for (const tier of SCORING_BONUSES.protein.thresholds) {
-        if (protein > tier.min) {
-            proteinBonus = tier.points;
-            break;
-        }
-    }
-
-    // Apply dirty bulk penalty
-    if (proteinBonus > 0 && (satFat > DIRTY_BULK_THRESHOLDS.saturatedFat || sugar > DIRTY_BULK_THRESHOLDS.sugar)) {
-        proteinBonus = Math.round(proteinBonus * 0.5);
-        addAdjustment('Protein', `${protein.toFixed(1)}g (reduced: high fat/sugar)`, proteinBonus, 'bonus');
-    } else if (proteinBonus > 0) {
-        addAdjustment('Protein', `${protein.toFixed(1)}g`, proteinBonus, 'bonus');
-    }
-    runningScore += proteinBonus;
-
-    // Fruit/Veg bonus (with sugar trap check)
-    const fruitVeg = nutriments['fruits-vegetables-nuts-estimate-from-ingredients_100g'] || 0;
-    if (sugar <= SUGAR_TRAP_THRESHOLD) {
-        for (const tier of SCORING_BONUSES.fruitVeg.thresholds) {
-            if (fruitVeg > tier.min) {
-                addAdjustment('Fruits/Vegetables', `${Math.round(fruitVeg)}%`, tier.points, 'bonus');
-                runningScore += tier.points;
-                break;
-            }
-        }
-    }
-
-    // Clamp score
-    const finalScore = Math.max(0, Math.min(100, Math.round(runningScore)));
-
-    return {
-        score: finalScore,
-        adjustments,
-        baseScore: BASE_SCORE
-    };
+// Maps to the new calculateDetailedScore output
+const calculateScoreBreakdown = (product) => {
+    return calculateDetailedScore(product);
 };
-
-// Helper for linear interpolation
-function linearScore(val, minVal, maxVal, maxPoints) {
-    if (val <= minVal) return 0;
-    if (val >= maxVal) return maxPoints;
-    return Math.round(((val - minVal) / (maxVal - minVal)) * maxPoints);
-}
 
 /**
  * ScoreBreakdown component - shows how the score was calculated

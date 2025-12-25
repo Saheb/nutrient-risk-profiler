@@ -13,17 +13,22 @@ export const SCORING_PENALTIES = {
     energy: {
         min: 300,      // kcal - no penalty below this
         max: 700,      // kcal - max penalty at/above this
-        maxPoints: 30
+        maxPoints: 40
     },
     sugar: {
         min: 5,        // grams
         max: 50,       // grams
         maxPoints: 70
     },
+    totalFat: {
+        min: 5,        // grams
+        max: 35,       // grams
+        maxPoints: 30
+    },
     saturatedFat: {
         min: 1,        // grams
-        max: 12,       // grams
-        maxPoints: 35
+        max: 10,       // grams
+        maxPoints: 50
     },
     sodium: {
         min: 0.2,      // grams
