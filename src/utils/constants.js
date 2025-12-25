@@ -27,7 +27,7 @@ export const SCORING_PENALTIES = {
     },
     saturatedFat: {
         min: 1,        // grams
-        max: 10,       // grams
+        max: 20,       // grams (moved from 10 to 20 to strictly penalize only extremely high values)
         maxPoints: 50
     },
     sodium: {
@@ -42,6 +42,8 @@ export const SCORING_PENALTIES = {
         maxPoints: 40
     }
 };
+
+
 
 // Bonus thresholds
 export const SCORING_BONUSES = {

@@ -1,3 +1,5 @@
+import { SCORING_PENALTIES } from './constants';
+
 
 /**
  * Calculates a risk score from 0 (Bad) to 100 (Good) for a product.
@@ -55,11 +57,14 @@ export const calculateDetailedScore = (product) => {
     addAdjustment('Saturated Fat', `${satFatVal.toFixed(1)}g`, -satFatScore, 'penalty');
     runningScore -= satFatScore;
 
-    // Total Fat
+    // Total Fat -> Now "Other Fats" (Total - Saturated) to avoid double counting
     const totalFatVal = nutriments['fat_100g'] || 0;
-    const totalFatScore = calculateTotalFatScore(totalFatVal);
-    addAdjustment('Total Fat', `${totalFatVal.toFixed(1)}g`, -totalFatScore, 'penalty');
-    runningScore -= totalFatScore;
+    const otherFatVal = Math.max(0, totalFatVal - satFatVal);
+
+    // We reuse the total fat scoring curve for the "other" fats.
+    const otherFatScore = calculateTotalFatScore(otherFatVal);
+    addAdjustment('Other Fats', `${otherFatVal.toFixed(1)}g`, -otherFatScore, 'penalty');
+    runningScore -= otherFatScore;
 
     // Sodium
     const sodiumVal = nutriments['sodium_100g'] || 0;
@@ -167,32 +172,28 @@ function linearScore(val, minVal, maxVal, maxPoints) {
 }
 
 function calculateEnergyScore(val) {
-    // Range: 300 kcal (0 pts) -> 700 kcal (40 pts)
-    return linearScore(val, 300, 700, 40);
+    const { min, max, maxPoints } = SCORING_PENALTIES.energy;
+    return linearScore(val, min, max, maxPoints);
 }
 
 function calculateSugarScore(val) {
-    // Range: 5g (0 pts) -> 50g (70 pts)
-    // Extended range to 50g to allow differentiation at high levels
-    return linearScore(val, 5, 50, 70);
+    const { min, max, maxPoints } = SCORING_PENALTIES.sugar;
+    return linearScore(val, min, max, maxPoints);
 }
 
 function calculateTotalFatScore(val) {
-    // Range: 5g (0 pts) -> 35g (30 pts)
-    // Penalize high total fat usage, especially for snacks
-    return linearScore(val, 5, 35, 30);
+    const { min, max, maxPoints } = SCORING_PENALTIES.totalFat;
+    return linearScore(val, min, max, maxPoints);
 }
 
 function calculateSaturatedFatScore(val) {
-    // Range: 1g (0 pts) -> 10g (50 pts)
-    // Very high penalty - saturated fat is a major health concern
-    // 10g sat fat = 50% daily value, should heavily penalize
-    return linearScore(val, 1, 10, 50);
+    const { min, max, maxPoints } = SCORING_PENALTIES.saturatedFat;
+    return linearScore(val, min, max, maxPoints);
 }
 
 function calculateSodiumScore(val) {
-    // Range: 0.2g (0 pts) -> 2g (35 pts)
-    return linearScore(val, 0.2, 2, 35);
+    const { min, max, maxPoints } = SCORING_PENALTIES.sodium;
+    return linearScore(val, min, max, maxPoints);
 }
 
 // Helpers - These return "Bonus points" (positive numbers to be added)

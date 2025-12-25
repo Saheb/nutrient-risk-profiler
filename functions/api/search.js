@@ -82,7 +82,9 @@ export async function onRequestGet(context) {
     const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     // Build search URL with optional country filter
-    let searchUrl = `${OFF_API_URL}?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20&sort_by=unique_scans_n`;
+    // Explicitly request fields to ensure we have all data needed for scoring
+    const fields = 'code,product_name,brands,image_url,nutriments,additives_n,additives_tags,nutriscore_grade,states_tags,ingredients_text,_id,id';
+    let searchUrl = `${OFF_API_URL}?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20&sort_by=unique_scans_n&fields=${fields}`;
     if (countryTag) {
         searchUrl += `&countries_tags_contains=${countryTag}`;
     }
