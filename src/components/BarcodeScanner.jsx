@@ -1,210 +1,197 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
-import { X, AlertCircle, Loader2, ZoomIn, ZoomOut } from 'lucide-react';
+import Quagga from '@ericblade/quagga2';
+import { X, AlertCircle, Loader2 } from 'lucide-react';
 
 const BarcodeScanner = ({ onScanSuccess, onClose }) => {
     const [error, setError] = useState(null);
-    const [isScanning, setIsScanning] = useState(true);
-    const [zoomCapability, setZoomCapability] = useState(null);
-    const [zoomValue, setZoomValue] = useState(1);
-
+    const [isInitializing, setIsInitializing] = useState(true);
     const scannerRef = useRef(null);
-    const scannerId = "reader";
+    // Track if component is mounted to prevent state updates after unmount
+    const mountedRef = useRef(true);
+    // Track if Quagga is running to prevent double start/stop
+    const runningRef = useRef(false);
 
-    // Manage Scanner Lifecycle
     useEffect(() => {
-        let isMounted = true;
+        mountedRef.current = true;
+        let ignoreSync = false;
 
-        const startScanner = async () => {
+        const initScanner = async () => {
             setError(null);
+            setIsInitializing(true);
 
-            // 1. Stop existing scanner if running (cleanup safety)
-            if (scannerRef.current) {
-                try {
-                    await scannerRef.current.stop();
-                } catch (err) {
-                    console.warn("Failed to stop previous scanner instance", err);
-                }
-            }
+            // Safety delay
+            await new Promise(r => setTimeout(r, 100));
+            if (!mountedRef.current) return;
 
-            if (!isMounted) return;
-
-            // 2. Initialize new scanner with restricted formats (1D only for products)
-            const formatsToSupport = [
-                Html5QrcodeSupportedFormats.EAN_13,
-                Html5QrcodeSupportedFormats.EAN_8,
-                Html5QrcodeSupportedFormats.UPC_A,
-                Html5QrcodeSupportedFormats.UPC_E,
-                Html5QrcodeSupportedFormats.CODE_128,
-            ];
-            const html5QrCode = new Html5Qrcode(scannerId, { formatsToSupport, verbose: false });
-            scannerRef.current = html5QrCode;
+            const constraints = {
+                width: 1280,
+                height: 720,
+                facingMode: "environment",
+                aspectRatio: { min: 1, max: 2 }
+            };
 
             const config = {
-                fps: 20, // Optimized for mobile performance
-                qrbox: { width: 280, height: 200 }, // Wide enough for barcodes, controlled height
-                aspectRatio: 1.0,
-                useBarCodeDetectorIfSupported: true, // Critical for iOS performance
-                videoConstraints: {
-                    facingMode: "environment",
-                    width: { min: 640, ideal: 1280, max: 1920 },
-                    height: { min: 480, ideal: 720, max: 1080 },
-                    focusMode: "continuous"
-                }
+                inputStream: {
+                    type: "LiveStream",
+                    constraints: constraints,
+                    target: scannerRef.current,
+                    area: { // defines rectangle of the detection/localization area
+                        top: "10%",    // top offset
+                        right: "10%",  // right offset
+                        left: "10%",   // left offset
+                        bottom: "10%"  // bottom offset
+                    },
+                },
+                locator: {
+                    patchSize: "medium",
+                    halfSample: true,
+                },
+                numOfWorkers: 2,
+                decoder: {
+                    readers: [
+                        "ean_reader",
+                        "ean_8_reader",
+                        "upc_reader",
+                        "upc_e_reader"
+                    ],
+                    debug: {
+                        showCanvas: false,
+                        showPatches: false,
+                        showFoundPatches: false,
+                        showSkeleton: false,
+                        showLabels: false,
+                        showPatchLabels: false,
+                        showRemainingPatchLabels: false,
+                        boxFromPatches: {
+                            showTransformed: false,
+                            showTransformedBox: false,
+                            showBB: false
+                        }
+                    }
+                },
+                locate: true
             };
 
             try {
-                await html5QrCode.start(
-                    { facingMode: "environment" }, // Prefer back camera
-                    config,
-                    (decodedText, decodedResult) => {
-                        // Validate barcode before accepting
-                        if (isValidBarcode(decodedText)) {
-                            // console.log(`Valid scan result: ${decodedText}`, decodedResult);
-                            onScanSuccess(decodedText);
+                await Quagga.init(config);
+                if (!mountedRef.current || ignoreSync) return;
 
-                            // Stop on success
-                            html5QrCode.stop().then(() => {
-                                scannerRef.current = null;
-                                onClose();
-                            }).catch(err => console.error("Failed to stop scanner after success", err));
-                        } else {
-                            console.warn(`Ignored invalid/partial scan: ${decodedText}`);
+                await Quagga.start();
+                runningRef.current = true;
+                setIsInitializing(false);
+
+                Quagga.onDetected((result) => {
+                    if (result && result.codeResult && result.codeResult.code) {
+                        const code = result.codeResult.code;
+                        // Basic validation
+                        if (isValidBarcode(code)) {
+                            // Debounce/Throttling is handled by stop() usually being called immediately
+                            onScanSuccess(code);
+                            // Stop immediately to prevent duplicate scans
+                            Quagga.stop();
+                            runningRef.current = false;
+                            onClose();
                         }
-                    },
-                    (errorMessage) => {
-                        // parse error, ignore it.
                     }
-                );
+                });
 
-
-                if (isMounted) {
-                    setIsScanning(true);
-
-                    // 3. Check Zoom Capabilities
-                    try {
-                        const capabilities = html5QrCode.getRunningTrackCameraCapabilities();
-                        const zoomCap = capabilities.zoomFeature();
-                        if (zoomCap && zoomCap.isSupported()) {
-                            setZoomCapability(zoomCap);
-                            setZoomValue(zoomCap.value());
-                        } else {
-                            setZoomCapability(null);
-                        }
-                    } catch (e) {
-                        console.warn("Zoom capabilities not supported", e);
-                    }
-                }
             } catch (err) {
-                if (isMounted) {
-                    console.error("Failed to start scanner", err);
-                    // Show specific error message for better debugging
-                    let errorMessage = "Failed to start camera.";
-                    if (err?.name === 'NotAllowedError') {
-                        errorMessage = "Camera permission denied. Please allow camera access in your browser settings.";
-                    } else if (err?.name === 'NotFoundError') {
-                        errorMessage = "No camera found on your device.";
-                    } else if (err?.name === 'NotReadableError') {
-                        errorMessage = "Camera is already in use by another app or tab.";
-                    } else if (err?.name === 'OverconstrainedError') {
-                        errorMessage = "Camera does not support the requested resolution/features.";
-                    } else if (err) {
-                        errorMessage = `Camera Error: ${err.message || err}`;
-                    }
-                    setError(errorMessage);
-                    setIsScanning(false);
+                console.error("Quagga Init Failed", err);
+                if (mountedRef.current) {
+                    let msg = "Failed to access camera.";
+                    if (err?.name === 'NotAllowedError') msg = "Camera permission denied.";
+                    setError(msg);
+                    setIsInitializing(false);
                 }
             }
         };
 
-        // Small delay to ensure DOM is ready
-        const timer = setTimeout(startScanner, 300);
+        initScanner();
 
         return () => {
-            isMounted = false;
-            clearTimeout(timer);
-            if (scannerRef.current) {
-                scannerRef.current.stop().catch(err => console.warn("Cleanup stop failed", err));
+            mountedRef.current = false;
+            ignoreSync = true;
+            // Cleanup matches
+            Quagga.offDetected();
+            if (runningRef.current) {
+                Quagga.stop().catch(e => console.warn("Failed to stop Quagga", e));
+                runningRef.current = false;
             }
         };
     }, [onScanSuccess, onClose]);
 
-    const handleRetry = () => {
-        setError(null);
-        setIsScanning(true);
-        // Simple retry by forcing re-mount logic via parent or just calling startScanner again?
-        // Since startScanner is in useEffect, we can't call it directly easily without extracting it.
-        // But closing and reopening is the cleanest retry from user perspective if we don't want complex state.
-        // For now, let's just close.
-        onClose();
-    };
-
-    const handleZoomChange = (e) => {
-        const newZoom = parseFloat(e.target.value);
-        setZoomValue(newZoom);
-        if (scannerRef.current && zoomCapability) {
-            zoomCapability.apply(newZoom);
-        }
-    };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="relative w-full max-w-md bg-card rounded-2xl shadow-xl overflow-hidden border border-border flex flex-col max-h-[90vh]">
-                <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
-                    <h3 className="text-lg font-semibold">Scan Barcode</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+            <div className="relative w-full max-w-md bg-black rounded-2xl shadow-xl overflow-hidden border border-gray-800 flex flex-col max-h-[90vh]">
+
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 bg-gray-900 border-b border-gray-800 shrink-0 z-20">
+                    <h3 className="text-lg font-semibold text-white">Scan Barcode</h3>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-secondary rounded-full transition-colors"
+                        className="p-2 hover:bg-gray-800 rounded-full transition-colors text-gray-400 hover:text-white"
                     >
                         <X className="h-5 w-5" />
                     </button>
                 </div>
 
-                <div className="p-4 flex-1 flex flex-col items-center justify-center bg-black/5 overflow-y-auto">
+                {/* Viewport */}
+                <div className="flex-1 relative bg-black overflow-hidden flex items-center justify-center">
+
                     {error ? (
-                        <div className="text-center p-4 flex flex-col items-center gap-3">
-                            <AlertCircle className="h-10 w-10 text-destructive" />
-                            <p className="text-destructive font-medium">{error}</p>
+                        <div className="text-center p-6 flex flex-col items-center gap-4">
+                            <AlertCircle className="h-12 w-12 text-red-500" />
+                            <p className="text-red-400 font-medium">{error}</p>
                             <button
-                                onClick={handleRetry}
-                                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                                onClick={onClose}
+                                className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
                             >
-                                Close & Retry
+                                Close
                             </button>
                         </div>
                     ) : (
-                        <div className="w-full flex flex-col gap-4">
-                            <div className="w-full relative rounded-lg overflow-hidden bg-black aspect-square">
-                                <div id={scannerId} className="w-full h-full"></div>
-                                {!isScanning && !error && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white z-10">
-                                        <Loader2 className="h-8 w-8 animate-spin" />
-                                    </div>
-                                )}
-                            </div>
+                        <>
+                            {/* Camera Container */}
+                            {/* Quagga needs a direct DOM element to attach video/canvas to. 
+                                By default it appends to the target. 
+                                We'll give it a clean container.
+                                viewport is crucial for Quagga.
+                             */}
+                            <div
+                                ref={scannerRef}
+                                className="w-full h-full [&>video]:w-full [&>video]:h-full [&>video]:object-cover"
+                            />
 
-                            {/* Zoom Control */}
-                            {zoomCapability && (
-                                <div className="flex items-center gap-3 px-2">
-                                    <ZoomOut className="h-4 w-4 text-muted-foreground" />
-                                    <input
-                                        type="range"
-                                        min={zoomCapability.min()}
-                                        max={zoomCapability.max()}
-                                        step={zoomCapability.step()}
-                                        value={zoomValue}
-                                        onChange={handleZoomChange}
-                                        className="flex-1 h-2 bg-secondary rounded-lg appearance-none cursor-pointer"
-                                    />
-                                    <ZoomIn className="h-4 w-4 text-muted-foreground" />
+                            {/* Loading State */}
+                            {isInitializing && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black z-30">
+                                    <div className="flex flex-col items-center gap-2 text-blue-400">
+                                        <Loader2 className="h-10 w-10 animate-spin" />
+                                        <span className="text-sm font-medium">Starting Camera...</span>
+                                    </div>
                                 </div>
                             )}
-                        </div>
+
+                            {/* Overlay Guides */}
+                            {!isInitializing && !error && (
+                                <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
+                                    {/* Darken outer area */}
+                                    <div className="absolute inset-0 border-[60px] border-black/50 transition-all duration-300"></div>
+
+                                    {/* Red Line */}
+                                    <div className="w-64 h-0.5 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse"></div>
+
+                                    {/* Corners */}
+                                    <div className="absolute w-64 h-40 border-2 border-white/30 rounded-lg"></div>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
 
-                <div className="p-4 bg-secondary/50 text-center text-sm text-muted-foreground shrink-0">
-                    Point your camera at a product barcode.
+                <div className="p-4 bg-gray-900 text-center text-sm text-gray-400 shrink-0 z-20">
+                    Align barcode within the frame.
                 </div>
             </div>
         </div>
@@ -216,25 +203,15 @@ export default BarcodeScanner;
 // Helper: Validate Barcode (Length + Checksum)
 const isValidBarcode = (code) => {
     if (!code || !/^\d+$/.test(code)) return false;
-
-    // Standard lengths for EAN-8, EAN-13, UPC-A (12), GTIN-14
     if (![8, 12, 13, 14].includes(code.length)) return false;
-
-    // Checksum Validation (Modulo 10)
-    // 1. Sum odd-position digits (from right) * 3
-    // 2. Sum even-position digits (from right) * 1
-    // 3. Total sum + check digit should be divisible by 10
-
+    // Basic Checksum (same as before)
     const digits = code.split('').map(Number);
-    const checkDigit = digits.pop(); // Remove last digit (check digit)
+    const checkDigit = digits.pop();
     const reversedDigits = digits.reverse();
-
     let sum = 0;
     for (let i = 0; i < reversedDigits.length; i++) {
-        const weight = (i % 2 === 0) ? 3 : 1; // Odd positions from right get weight 3
-        sum += reversedDigits[i] * weight;
+        sum += reversedDigits[i] * ((i % 2 === 0) ? 3 : 1);
     }
-
     const calculatedCheckDigit = (10 - (sum % 10)) % 10;
     return checkDigit === calculatedCheckDigit;
 };
