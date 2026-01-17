@@ -95,7 +95,7 @@ const parseNutritionText = (text) => {
             // "8 0" -> "8.0" (risky, but if it's < 100g usually safe for nutrients like sugar/fat?)
 
             // Replace common OCR artifacts for decimal points
-            value = value.replace(/[\s,'"]+/g, '.');
+            value = value.replace(/[\s,'\"]+/g, '.');
 
             // Remove any remaining non-numeric chars except dot
             value = value.replace(/[^0-9.]/g, '');
@@ -121,19 +121,38 @@ const parseNutritionText = (text) => {
     // Pattern: Digits + (Optional Separator: dot, comma, space, quote) + (Optional Digits)
     const numberPattern = "([0-9]+[\\s.,']*[0-9]*)";
 
+    // Carbohydrates / Carbs (total)
+    extracted.carbohydrates_100g = findValue(new RegExp(`(carbohydrates?|total carbs?|carbs)[^0-9]*${numberPattern}`, 'i'), 'carbs');
+
     // Sugars
     // Prioritize "Sugars" over "Carbohydrates" to avoid picking up the total carb value
     extracted.sugars_100g = findValue(new RegExp(`(sugars?|of which sugars)[^0-9]*${numberPattern}`, 'i'), 'sugars');
 
-    // Fallback for sugars if not found (sometimes just listed under carbs)
-    if (!extracted.sugars_100g) {
-        extracted.sugars_100g = findValue(new RegExp(`(carbohydrates?)[^0-9]*${numberPattern}`, 'i'), 'carbs_fallback');
+    // Total Fat
+    extracted.fat_100g = findValue(new RegExp(`(total fat|fat)[^0-9]*${numberPattern}`, 'i'), 'total_fat');
+
+    // Saturated Fat
+    extracted.saturated_fat_100g = findValue(new RegExp(`(saturated|sat\\.? fat)[^0-9]*${numberPattern}`, 'i'), 'sat_fat');
+
+    // Sodium - detect if value is in mg (common on labels)
+    const sodiumMatch = text.match(/(sodium|salt)[^0-9]*([0-9]+[\s.,']*[0-9]*)\s*(mg|g)?/i);
+    if (sodiumMatch && sodiumMatch[2]) {
+        let value = sodiumMatch[2].replace(/[\s,'\"]+/g, '.').replace(/[^0-9.]/g, '').replace(/\.+/g, '.');
+        if (value.endsWith('.')) value = value.slice(0, -1);
+        const unit = sodiumMatch[3]?.toLowerCase();
+        // If unit is 'g' and value is small (<1), convert to mg
+        // If unit is 'mg' or value seems like mg (> 10), keep as mg
+        if (unit === 'g' && parseFloat(value) < 1) {
+            extracted.sodium_100g = String(parseFloat(value) * 1000); // convert g to mg
+        } else if (unit === 'mg' || parseFloat(value) > 10) {
+            extracted.sodium_100g = value; // already in mg
+        } else {
+            extracted.sodium_100g = String(parseFloat(value) * 1000); // assume g, convert to mg
+        }
     }
 
-    extracted.saturated_fat_100g = findValue(new RegExp(`(saturated|sat\\.? fat)[^0-9]*${numberPattern}`, 'i'), 'sat_fat');
-    extracted.sodium_100g = findValue(new RegExp(`(sodium|salt)[^0-9]*${numberPattern}`, 'i'), 'sodium');
     extracted.proteins_100g = findValue(new RegExp(`(protein|proteins)[^0-9]*${numberPattern}`, 'i'), 'protein');
-    extracted.fiber_100g = findValue(new RegExp(`(fiber|fibre)[^0-9]*${numberPattern}`, 'i'), 'fiber');
+    extracted.fiber_100g = findValue(new RegExp(`(fiber|fibre|dietary fiber)[^0-9]*${numberPattern}`, 'i'), 'fiber');
 
     // Clean up: remove nulls
     Object.keys(extracted).forEach(key => {
@@ -146,3 +165,4 @@ const parseNutritionText = (text) => {
     // console.log("Final Extracted Data:", extracted);
     return extracted;
 };
+

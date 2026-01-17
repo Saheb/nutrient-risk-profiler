@@ -35,6 +35,11 @@ export const SCORING_PENALTIES = {
         max: 2,        // grams
         maxPoints: 35
     },
+    netCarbs: {
+        min: 20,       // grams (Carbs - Fiber) - no penalty below this
+        max: 60,       // grams - max penalty at/above this  
+        maxPoints: 25  // moderate penalty since sugars are already penalized separately
+    },
     additives: {
         basePerAdditive: 1,
         perHighRisk: 5,

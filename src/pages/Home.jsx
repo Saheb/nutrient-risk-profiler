@@ -188,7 +188,7 @@ const Home = () => {
                     className="w-full py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium shadow-sm hover:bg-gray-50 active:scale-95 transition-all flex items-center justify-center gap-2"
                 >
                     <Calculator size={20} className="text-blue-600" />
-                    Open Score Calculator
+                    Live Score Calculator
                 </button>
             </div>
 

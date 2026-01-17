@@ -72,6 +72,16 @@ export const calculateDetailedScore = (product) => {
     addAdjustment('Sodium', `${(sodiumVal * 1000).toFixed(0)}mg`, -sodiumScore, 'penalty');
     runningScore -= sodiumScore;
 
+    // Net Carbs (Carbs - Fiber) - rewards fiber-rich foods, penalizes refined carbs
+    const carbsVal = nutriments['carbohydrates_100g'] || 0;
+    const fiberForNetCarbs = nutriments['fiber_100g'] || 0;
+    const netCarbsVal = Math.max(0, carbsVal - fiberForNetCarbs);
+    const netCarbsScore = calculateNetCarbsScore(netCarbsVal);
+    if (carbsVal > 0) {
+        addAdjustment('Net Carbs', `${netCarbsVal.toFixed(0)}g (${carbsVal.toFixed(0)}g - ${fiberForNetCarbs.toFixed(0)}g fiber)`, -netCarbsScore, 'penalty');
+    }
+    runningScore -= netCarbsScore;
+
     // Additives
     let additivesPenalty = 0;
     const additivesCount = product.additives_n || 0;
@@ -193,6 +203,11 @@ function calculateSaturatedFatScore(val) {
 
 function calculateSodiumScore(val) {
     const { min, max, maxPoints } = SCORING_PENALTIES.sodium;
+    return linearScore(val, min, max, maxPoints);
+}
+
+function calculateNetCarbsScore(val) {
+    const { min, max, maxPoints } = SCORING_PENALTIES.netCarbs;
     return linearScore(val, min, max, maxPoints);
 }
 
