@@ -12,6 +12,7 @@ const QuickScan = () => {
     const [nutritionImage, setNutritionImage] = useState(null);
     const [scoreData, setScoreData] = useState(null);
     const [showBreakdown, setShowBreakdown] = useState(true);
+    const [ocrSource, setOcrSource] = useState(null);
 
     const [nutrients, setNutrients] = useState({
         energy_100g: '',
@@ -58,14 +59,19 @@ const QuickScan = () => {
 
     const scanImage = async (imageData) => {
         setIsScanning(true);
+        setOcrSource(null);
         const extracted = await extractNutritionFromImage(imageData);
         setIsScanning(false);
 
-        if (extracted) {
+        if (extracted && extracted._source !== 'error') {
+            setOcrSource(extracted._source || 'unknown');
             setNutrients(prev => ({
                 ...prev,
                 ...extracted
             }));
+        } else if (extracted?._source === 'error') {
+            setOcrSource('error');
+            console.error('OCR Error:', extracted._error);
         }
     };
 
@@ -198,7 +204,17 @@ const QuickScan = () => {
                 {/* Camera Action */}
                 <div className="bg-white p-4 rounded-xl shadow-sm space-y-4">
                     <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-gray-800">Nutrition Values (per 100g)</h3>
+                        <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-gray-800">Nutrition Values (per 100g)</h3>
+                            {ocrSource && (
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${ocrSource === 'gemini-2.5-flash'
+                                    ? 'bg-purple-100 text-purple-700'
+                                    : 'bg-gray-100 text-gray-600'
+                                    }`}>
+                                    {ocrSource === 'gemini-2.5-flash' ? '✨ AI' : '📝 Local'}
+                                </span>
+                            )}
+                        </div>
                         <button
                             onClick={() => setShowCamera(true)}
                             className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-blue-700 transition-colors"
@@ -227,6 +243,22 @@ const QuickScan = () => {
                                     <ScanLine size={14} /> Re-scan
                                 </button>
                             )}
+                        </div>
+                    )}
+
+                    {/* OCR Status Message */}
+                    {ocrSource && !isScanning && (
+                        <div className={`text-xs px-3 py-2 rounded-lg ${ocrSource === 'gemini-2.5-flash'
+                                ? 'bg-purple-50 text-purple-700 border border-purple-100'
+                                : ocrSource === 'error'
+                                    ? 'bg-red-50 text-red-700 border border-red-100'
+                                    : 'bg-gray-50 text-gray-600 border border-gray-100'
+                            }`}>
+                            {ocrSource === 'gemini-2.5-flash'
+                                ? '✨ Extracted using Gemini AI – values may still need review'
+                                : ocrSource === 'error'
+                                    ? '❌ OCR failed – please enter values manually'
+                                    : '📝 Extracted using OCR'}
                         </div>
                     )}
 
