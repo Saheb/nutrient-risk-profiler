@@ -73,6 +73,47 @@ The final score is calculated as `Base (100) - Penalties + Bonuses`, clamped bet
 | `npm run build` | Production build |
 | `npm run test` | Run unit tests |
 
+## Gemini OCR Backend
+
+The Live Score Calculator uses **Gemini 2.5 Flash** for nutrition label OCR. This requires a Google AI API key.
+
+### Setup
+
+1. Get an API key from [Google AI Studio](https://aistudio.google.com/apikey)
+
+2. Add the secret to Cloudflare Pages:
+   ```bash
+   npx wrangler pages secret put GEMINI_API_KEY
+   # Paste your API key when prompted
+   ```
+
+3. Deploy:
+   ```bash
+   npm run build && npx wrangler pages deploy dist --branch main
+   ```
+
+### Local Testing
+
+To test the OCR locally, create a `.dev.vars` file in the project root:
+
+```bash
+# .dev.vars (git-ignored)
+GEMINI_API_KEY=your_api_key_here
+```
+
+Then run with the worker:
+```bash
+npm run dev:worker
+```
+
+### How it Works
+
+```
+User captures image → /api/ocr → Gemini 2.5 Flash → JSON nutrients → UI
+```
+
+The API extracts nutrition values per 100g and returns them as structured JSON.
+
 ## Tech Stack
 
 - React 19
