@@ -72,13 +72,14 @@ export const calculateDetailedScore = (product) => {
     addAdjustment('Sodium', `${(sodiumVal * 1000).toFixed(0)}mg`, -sodiumScore, 'penalty');
     runningScore -= sodiumScore;
 
-    // Net Carbs (Carbs - Fiber) - rewards fiber-rich foods, penalizes refined carbs
+    // Net Carbs (Carbs - Fiber - Sugars) - avoids double-counting sugars which are penalized separately
     const carbsVal = nutriments['carbohydrates_100g'] || 0;
     const fiberForNetCarbs = nutriments['fiber_100g'] || 0;
-    const netCarbsVal = Math.max(0, carbsVal - fiberForNetCarbs);
+    const sugarsForNetCarbs = nutriments['sugars_100g'] || 0;
+    const netCarbsVal = Math.max(0, carbsVal - fiberForNetCarbs - sugarsForNetCarbs);
     const netCarbsScore = calculateNetCarbsScore(netCarbsVal);
-    if (carbsVal > 0) {
-        addAdjustment('Net Carbs', `${netCarbsVal.toFixed(0)}g (${carbsVal.toFixed(0)}g - ${fiberForNetCarbs.toFixed(0)}g fiber)`, -netCarbsScore, 'penalty');
+    if (carbsVal > 0 && netCarbsVal > 0) {
+        addAdjustment('Net Carbs', `${netCarbsVal.toFixed(0)}g (carbs - fiber - sugars)`, -netCarbsScore, 'penalty');
     }
     runningScore -= netCarbsScore;
 

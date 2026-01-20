@@ -29,6 +29,7 @@ Points are subtracted for nutrients that should be limited:
 - **Total Fat**: Linear penalty from 0 pts (5g) to 30 pts (35g).
 - **Saturated Fat**: Linear penalty from 0 pts (1g) to 50 pts (10g).
 - **Sodium**: Linear penalty from 0 pts (0.2g) to 35 pts (2g).
+- **Net Carbs**: Linear penalty from 0 pts (35g) to 15 pts (70g). Formula: `Carbs - Fiber - Sugars` to avoid double-counting sugars.
 - **Additives**: 1 point per additive + additional penalties for high-risk additives (e.g., Nitrites, Artificial Colors). Max penalty 40 pts.
 
 > **Note**: If sugar content is high (> 30g), the Fruit/Vegetable bonus is disabled to prevent sugary snacks from scoring artificially high.
