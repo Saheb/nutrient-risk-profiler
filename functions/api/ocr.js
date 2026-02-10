@@ -1,25 +1,15 @@
+
 /**
- * OCR API endpoint using Gemini 2.5 Flash
+ * OCR API endpoint using Gemini 2.5 Flash and Sarvam AI
  * Extracts nutrition information from food label images
  */
 
 export async function onRequestPost(context) {
     const { request, env } = context;
 
-    // Check for API key
-    if (!env.GEMINI_API_KEY) {
-        return new Response(JSON.stringify({
-            error: 'GEMINI_API_KEY not configured',
-            fallback: true
-        }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' }
-        });
-    }
-
     try {
         const body = await request.json();
-        const { image } = body;
+        const { image, provider = 'gemini' } = body;
 
         if (!image) {
             return new Response(JSON.stringify({ error: 'Missing image data' }), {
@@ -40,8 +30,57 @@ export async function onRequestPost(context) {
         const mimeType = matches[1];
         const base64Data = matches[2];
 
-        // Structured prompt for nutrition extraction
-        const extractionPrompt = `You are a nutrition label OCR expert. Extract nutrition information from this food label image.
+        let nutritionData;
+        let source = provider;
+
+        if (provider === 'mistral') {
+            try {
+                nutritionData = await extractWithMistral(env, mimeType, base64Data);
+            } catch (e) {
+                console.error('Mistral failed:', e.message);
+                if (e.message.includes('MISTRAL_API_KEY')) {
+                    throw e; // specific configuration error, don't fallback to mask it
+                }
+                console.log('Falling back to Gemini...');
+                source = 'gemini-fallback';
+                nutritionData = await extractWithGemini(env, mimeType, base64Data);
+            }
+        } else {
+            nutritionData = await extractWithGemini(env, mimeType, base64Data);
+        }
+
+        // Return the extracted nutrition data
+        return new Response(JSON.stringify({
+            success: true,
+            data: nutritionData,
+            source: source,
+            debug: {
+                // Return debug info if needed
+            }
+        }), {
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+    } catch (err) {
+        console.error('OCR API error:', err);
+        return new Response(JSON.stringify({
+            error: 'Server error',
+            message: err.message,
+            fallback: true
+        }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+}
+
+async function extractWithGemini(env, mimeType, base64Data) {
+    if (!env.GEMINI_API_KEY) {
+        throw new Error('GEMINI_API_KEY not configured');
+    }
+
+    // Structured prompt for nutrition extraction
+    const extractionPrompt = `You are a nutrition label OCR expert. Extract nutrition information from this food label image.
 
 IMPORTANT: 
 - Values should be per 100g serving (if the label shows per serving, try to calculate per 100g if possible)
@@ -60,112 +99,114 @@ Return this exact JSON structure (use null for any value not found):
   "fiber_100g": <number in grams or null>
 }`;
 
-        // Call Gemini 2.5 Flash API (stable version)
-        const geminiResponse = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.GEMINI_API_KEY}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [
-                            { text: extractionPrompt },
-                            {
-                                inline_data: {
-                                    mime_type: mimeType,
-                                    data: base64Data
-                                }
+    // Call Gemini 2.5 Flash API (stable version)
+    const geminiResponse = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.GEMINI_API_KEY}`,
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [
+                        { text: extractionPrompt },
+                        {
+                            inline_data: {
+                                mime_type: mimeType,
+                                data: base64Data
                             }
-                        ]
-                    }],
-                    generationConfig: {
-                        temperature: 0.1,
-                        maxOutputTokens: 1024,
-                    }
-                })
-            }
-        );
-
-        if (!geminiResponse.ok) {
-            const errorText = await geminiResponse.text();
-            console.error('Gemini API error:', errorText);
-            return new Response(JSON.stringify({
-                error: 'Gemini API error',
-                details: errorText,
-                fallback: true
-            }), {
-                status: 502,
-                headers: { 'Content-Type': 'application/json' }
-            });
+                        }
+                    ]
+                }],
+                generationConfig: {
+                    temperature: 0.1,
+                    maxOutputTokens: 1024,
+                }
+            })
         }
+    );
 
-        const geminiData = await geminiResponse.json();
+    if (!geminiResponse.ok) {
+        throw new Error(await geminiResponse.text());
+    }
 
-        // Extract the text response
-        const responseText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+    const geminiData = await geminiResponse.json();
+    const responseText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
 
-        if (!responseText) {
-            return new Response(JSON.stringify({
-                error: 'No response from Gemini',
-                fallback: true
-            }), {
-                status: 502,
-                headers: { 'Content-Type': 'application/json' }
-            });
-        }
+    if (!responseText) {
+        throw new Error('No response from Gemini');
+    }
 
-        // Parse the JSON response (handle potential markdown code blocks)
-        let nutritionData;
-        try {
-            // Remove markdown code blocks if present
-            let cleanedResponse = responseText.trim();
-            if (cleanedResponse.startsWith('```json')) {
-                cleanedResponse = cleanedResponse.slice(7);
-            } else if (cleanedResponse.startsWith('```')) {
-                cleanedResponse = cleanedResponse.slice(3);
-            }
-            if (cleanedResponse.endsWith('```')) {
-                cleanedResponse = cleanedResponse.slice(0, -3);
-            }
-            cleanedResponse = cleanedResponse.trim();
+    // Parse the JSON response
+    let cleanedResponse = responseText.trim();
+    if (cleanedResponse.startsWith('```json')) {
+        cleanedResponse = cleanedResponse.slice(7);
+    } else if (cleanedResponse.startsWith('```')) {
+        cleanedResponse = cleanedResponse.slice(3);
+    }
+    if (cleanedResponse.endsWith('```')) {
+        cleanedResponse = cleanedResponse.slice(0, -3);
+    }
 
-            nutritionData = JSON.parse(cleanedResponse);
-        } catch (parseError) {
-            console.error('Failed to parse Gemini response:', responseText);
-            return new Response(JSON.stringify({
-                error: 'Failed to parse nutrition data',
-                raw_response: responseText,
-                fallback: true
-            }), {
-                status: 500,
-                headers: { 'Content-Type': 'application/json' }
-            });
-        }
+    return JSON.parse(cleanedResponse.trim());
+}
 
-        // Return the extracted nutrition data
-        return new Response(JSON.stringify({
-            success: true,
-            data: nutritionData,
-            source: 'gemini-2.5-flash',
-            debug: {
-                rawResponse: responseText.substring(0, 500) // First 500 chars for debugging
-            }
-        }), {
-            headers: { 'Content-Type': 'application/json' }
-        });
+async function extractWithMistral(env, mimeType, base64Data) {
+    if (!env.MISTRAL_API_KEY) {
+        throw new Error('MISTRAL_API_KEY not configured');
+    }
 
-    } catch (err) {
-        console.error('OCR API error:', err);
-        return new Response(JSON.stringify({
-            error: 'Server error',
-            message: err.message,
-            fallback: true
-        }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' }
-        });
+    const extractionPrompt = `Extract nutrition information from this food label image.
+Return ONLY valid JSON with this structure (use null if not found):
+{
+  "energy_100g": <number in kcal>,
+  "carbohydrates_100g": <number in grams>,
+  "sugars_100g": <number in grams>,
+  "fat_100g": <number in grams>,
+  "saturated_fat_100g": <number in grams>,
+  "sodium_100g": <number in mg>,
+  "proteins_100g": <number in grams>,
+  "fiber_100g": <number in grams>
+}`;
+
+    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${env.MISTRAL_API_KEY}`
+        },
+        body: JSON.stringify({
+            model: "mistral-small-latest",
+            messages: [
+                {
+                    role: "user",
+                    content: [
+                        { type: "text", text: extractionPrompt },
+                        {
+                            type: "image_url",
+                            image_url: `data:${mimeType};base64,${base64Data}`
+                        }
+                    ]
+                }
+            ],
+            response_format: { type: "json_object" } // Mistral supports JSON mode
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error(await response.text());
+    }
+
+    const data = await response.json();
+    const content = data.choices[0].message.content;
+
+    // Parse JSON
+    try {
+        return JSON.parse(content);
+    } catch (e) {
+        console.error("Mistral JSON parse error, raw content:", content);
+        throw new Error("Failed to parse Mistral response as JSON");
     }
 }
 

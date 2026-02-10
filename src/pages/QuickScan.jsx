@@ -12,7 +12,9 @@ const QuickScan = () => {
     const [nutritionImage, setNutritionImage] = useState(null);
     const [scoreData, setScoreData] = useState(null);
     const [showBreakdown, setShowBreakdown] = useState(true);
+
     const [ocrSource, setOcrSource] = useState(null);
+    const [selectedProvider, setSelectedProvider] = useState('gemini'); // Default to Gemini
 
     const [nutrients, setNutrients] = useState({
         energy_100g: '',
@@ -60,7 +62,7 @@ const QuickScan = () => {
     const scanImage = async (imageData) => {
         setIsScanning(true);
         setOcrSource(null);
-        const extracted = await extractNutritionFromImage(imageData);
+        const extracted = await extractNutritionFromImage(imageData, selectedProvider);
         setIsScanning(false);
 
         if (extracted && extracted._source !== 'error') {
@@ -215,13 +217,23 @@ const QuickScan = () => {
                                 </span>
                             )}
                         </div>
-                        <button
-                            onClick={() => setShowCamera(true)}
-                            className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-blue-700 transition-colors"
-                        >
-                            <Camera size={16} />
-                            Scan Label
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <select
+                                value={selectedProvider}
+                                onChange={(e) => setSelectedProvider(e.target.value)}
+                                className="text-xs border rounded px-2 py-1 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            >
+                                <option value="gemini">Gemini 2.5 Flash</option>
+                                <option value="mistral">Mistral OCR</option>
+                            </select>
+                            <button
+                                onClick={() => setShowCamera(true)}
+                                className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-blue-700 transition-colors"
+                            >
+                                <Camera size={16} />
+                                Scan Label
+                            </button>
+                        </div>
                     </div>
 
                     {nutritionImage && (
@@ -249,10 +261,10 @@ const QuickScan = () => {
                     {/* OCR Status Message */}
                     {ocrSource && !isScanning && (
                         <div className={`text-xs px-3 py-2 rounded-lg ${ocrSource === 'gemini-2.5-flash'
-                                ? 'bg-purple-50 text-purple-700 border border-purple-100'
-                                : ocrSource === 'error'
-                                    ? 'bg-red-50 text-red-700 border border-red-100'
-                                    : 'bg-gray-50 text-gray-600 border border-gray-100'
+                            ? 'bg-purple-50 text-purple-700 border border-purple-100'
+                            : ocrSource === 'error'
+                                ? 'bg-red-50 text-red-700 border border-red-100'
+                                : 'bg-gray-50 text-gray-600 border border-gray-100'
                             }`}>
                             {ocrSource === 'gemini-2.5-flash'
                                 ? '✨ Extracted using Gemini AI – values may still need review'
