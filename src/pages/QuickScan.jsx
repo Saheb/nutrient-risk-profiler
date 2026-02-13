@@ -14,7 +14,6 @@ const QuickScan = () => {
     const [showBreakdown, setShowBreakdown] = useState(true);
 
     const [ocrSource, setOcrSource] = useState(null);
-    const [selectedProvider, setSelectedProvider] = useState('gemini'); // Default to Gemini
 
     const [nutrients, setNutrients] = useState({
         energy_100g: '',
@@ -62,7 +61,7 @@ const QuickScan = () => {
     const scanImage = async (imageData) => {
         setIsScanning(true);
         setOcrSource(null);
-        const extracted = await extractNutritionFromImage(imageData, selectedProvider);
+        const extracted = await extractNutritionFromImage(imageData);
         setIsScanning(false);
 
         if (extracted && extracted._source !== 'error') {
@@ -217,187 +216,178 @@ const QuickScan = () => {
                                 </span>
                             )}
                         </div>
-                        <div className="flex items-center gap-2">
-                            <select
-                                value={selectedProvider}
-                                onChange={(e) => setSelectedProvider(e.target.value)}
-                                className="text-xs border rounded px-2 py-1 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            >
-                                <option value="gemini">Gemini 2.5 Flash</option>
-                                <option value="mistral">Mistral OCR</option>
-                            </select>
-                            <button
-                                onClick={() => setShowCamera(true)}
-                                className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-blue-700 transition-colors"
-                            >
-                                <Camera size={16} />
-                                Scan Label
-                            </button>
-                        </div>
+                        <button
+                            onClick={() => setShowCamera(true)}
+                            className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-blue-700 transition-colors"
+                        >
+                            <Camera size={16} />
+                            Scan Label
+                        </button>
                     </div>
+                </div>
 
-                    {nutritionImage && (
-                        <div className="relative rounded-lg overflow-hidden border bg-gray-100">
-                            <img src={nutritionImage} alt="Label" className="w-full opacity-80" />
-                            {isScanning && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-                                    <div className="bg-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 text-sm font-medium">
-                                        <Loader2 size={16} className="animate-spin text-blue-600" />
-                                        Reading values...
-                                    </div>
+                {nutritionImage && (
+                    <div className="relative rounded-lg overflow-hidden border bg-gray-100">
+                        <img src={nutritionImage} alt="Label" className="w-full opacity-80" />
+                        {isScanning && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+                                <div className="bg-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 text-sm font-medium">
+                                    <Loader2 size={16} className="animate-spin text-blue-600" />
+                                    Reading values...
                                 </div>
-                            )}
-                            {!isScanning && (
-                                <button
-                                    onClick={() => scanImage(nutritionImage)}
-                                    className="absolute bottom-2 right-2 bg-white/90 p-1.5 rounded-md shadow text-xs font-medium flex items-center gap-1 hover:bg-white"
-                                >
-                                    <ScanLine size={14} /> Re-scan
-                                </button>
-                            )}
-                        </div>
-                    )}
-
-                    {/* OCR Status Message */}
-                    {ocrSource && !isScanning && (
-                        <div className={`text-xs px-3 py-2 rounded-lg ${ocrSource === 'gemini-2.5-flash'
-                            ? 'bg-purple-50 text-purple-700 border border-purple-100'
-                            : ocrSource === 'error'
-                                ? 'bg-red-50 text-red-700 border border-red-100'
-                                : 'bg-gray-50 text-gray-600 border border-gray-100'
-                            }`}>
-                            {ocrSource === 'gemini-2.5-flash'
-                                ? '✨ Extracted using Gemini AI – values may still need review'
-                                : ocrSource === 'error'
-                                    ? '❌ OCR failed – please enter values manually'
-                                    : '📝 Extracted using OCR'}
-                        </div>
-                    )}
-
-                    {/* Row 1: Energy, Carbs, Sugars */}
-                    <div className="grid grid-cols-3 gap-3">
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Energy (kcal)</label>
-                            <input
-                                type="number"
-                                name="energy_100g"
-                                value={nutrients.energy_100g}
-                                onChange={handleInputChange}
-                                className="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder="0"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Carbs (g)</label>
-                            <input
-                                type="number"
-                                name="carbohydrates_100g"
-                                value={nutrients.carbohydrates_100g}
-                                onChange={handleInputChange}
-                                className="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder="0"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Sugars (g)</label>
-                            <input
-                                type="number"
-                                name="sugars_100g"
-                                value={nutrients.sugars_100g}
-                                onChange={handleInputChange}
-                                className="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder="0"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Row 2: Total Fat, Sat. Fat */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Total Fat (g)</label>
-                            <input
-                                type="number"
-                                name="fat_100g"
-                                value={nutrients.fat_100g}
-                                onChange={handleInputChange}
-                                className="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder="0"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Sat. Fat (g)</label>
-                            <input
-                                type="number"
-                                name="saturated_fat_100g"
-                                value={nutrients.saturated_fat_100g}
-                                onChange={handleInputChange}
-                                className="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder="0"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Row 3: Sodium, Protein, Fiber */}
-                    <div className="grid grid-cols-3 gap-3">
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Sodium (mg)</label>
-                            <input
-                                type="number"
-                                name="sodium_100g"
-                                value={nutrients.sodium_100g}
-                                onChange={handleInputChange}
-                                className="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder="0"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Protein (g)</label>
-                            <input
-                                type="number"
-                                name="proteins_100g"
-                                value={nutrients.proteins_100g}
-                                onChange={handleInputChange}
-                                className="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder="0"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Fiber (g)</label>
-                            <input
-                                type="number"
-                                name="fiber_100g"
-                                value={nutrients.fiber_100g}
-                                onChange={handleInputChange}
-                                className="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder="0"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                    <h4 className="text-sm font-semibold text-blue-800 mb-1">How it works</h4>
-                    <p className="text-xs text-blue-600">
-                        This calculator uses the same scoring logic as the main app. Enter values manually or scan a nutrition label to see the real-time health score breakdown.
-                    </p>
-                </div>
-
-                {/* Debug View */}
-                {nutrients.raw_text && (
-                    <div className="bg-gray-100 p-4 rounded-xl border border-gray-200">
-                        <details>
-                            <summary className="text-xs font-semibold text-gray-600 cursor-pointer select-none">
-                                Debug: Raw OCR Text
-                            </summary>
-                            <pre className="mt-2 text-[10px] text-gray-500 whitespace-pre-wrap font-mono bg-white p-2 rounded border">
-                                {nutrients.raw_text}
-                            </pre>
-                        </details>
+                            </div>
+                        )}
+                        {!isScanning && (
+                            <button
+                                onClick={() => scanImage(nutritionImage)}
+                                className="absolute bottom-2 right-2 bg-white/90 p-1.5 rounded-md shadow text-xs font-medium flex items-center gap-1 hover:bg-white"
+                            >
+                                <ScanLine size={14} /> Re-scan
+                            </button>
+                        )}
                     </div>
                 )}
 
+                {/* OCR Status Message */}
+                {ocrSource && !isScanning && (
+                    <div className={`text-xs px-3 py-2 rounded-lg ${ocrSource === 'gemini-2.5-flash'
+                        ? 'bg-purple-50 text-purple-700 border border-purple-100'
+                        : ocrSource === 'error'
+                            ? 'bg-red-50 text-red-700 border border-red-100'
+                            : 'bg-gray-50 text-gray-600 border border-gray-100'
+                        }`}>
+                        {ocrSource === 'gemini-2.5-flash'
+                            ? '✨ Extracted using Gemini AI – values may still need review'
+                            : ocrSource === 'error'
+                                ? '❌ OCR failed – please enter values manually'
+                                : '📝 Extracted using OCR'}
+                    </div>
+                )}
+
+                {/* Row 1: Energy, Carbs, Sugars */}
+                <div className="grid grid-cols-3 gap-3">
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Energy (kcal)</label>
+                        <input
+                            type="number"
+                            name="energy_100g"
+                            value={nutrients.energy_100g}
+                            onChange={handleInputChange}
+                            className="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="0"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Carbs (g)</label>
+                        <input
+                            type="number"
+                            name="carbohydrates_100g"
+                            value={nutrients.carbohydrates_100g}
+                            onChange={handleInputChange}
+                            className="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="0"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Sugars (g)</label>
+                        <input
+                            type="number"
+                            name="sugars_100g"
+                            value={nutrients.sugars_100g}
+                            onChange={handleInputChange}
+                            className="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="0"
+                        />
+                    </div>
+                </div>
+
+                {/* Row 2: Total Fat, Sat. Fat */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Total Fat (g)</label>
+                        <input
+                            type="number"
+                            name="fat_100g"
+                            value={nutrients.fat_100g}
+                            onChange={handleInputChange}
+                            className="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="0"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Sat. Fat (g)</label>
+                        <input
+                            type="number"
+                            name="saturated_fat_100g"
+                            value={nutrients.saturated_fat_100g}
+                            onChange={handleInputChange}
+                            className="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="0"
+                        />
+                    </div>
+                </div>
+
+                {/* Row 3: Sodium, Protein, Fiber */}
+                <div className="grid grid-cols-3 gap-3">
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Sodium (mg)</label>
+                        <input
+                            type="number"
+                            name="sodium_100g"
+                            value={nutrients.sodium_100g}
+                            onChange={handleInputChange}
+                            className="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="0"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Protein (g)</label>
+                        <input
+                            type="number"
+                            name="proteins_100g"
+                            value={nutrients.proteins_100g}
+                            onChange={handleInputChange}
+                            className="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="0"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Fiber (g)</label>
+                        <input
+                            type="number"
+                            name="fiber_100g"
+                            value={nutrients.fiber_100g}
+                            onChange={handleInputChange}
+                            className="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="0"
+                        />
+                    </div>
+                </div>
             </div>
+
+            <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                <h4 className="text-sm font-semibold text-blue-800 mb-1">How it works</h4>
+                <p className="text-xs text-blue-600">
+                    This calculator uses the same scoring logic as the main app. Enter values manually or scan a nutrition label to see the real-time health score breakdown.
+                </p>
+            </div>
+
+            {/* Debug View */}
+            {nutrients.raw_text && (
+                <div className="bg-gray-100 p-4 rounded-xl border border-gray-200">
+                    <details>
+                        <summary className="text-xs font-semibold text-gray-600 cursor-pointer select-none">
+                            Debug: Raw OCR Text
+                        </summary>
+                        <pre className="mt-2 text-[10px] text-gray-500 whitespace-pre-wrap font-mono bg-white p-2 rounded border">
+                            {nutrients.raw_text}
+                        </pre>
+                    </details>
+                </div>
+            )}
+
         </div>
+
     );
 };
 

@@ -5,15 +5,15 @@
 /**
  * Main OCR function - uses Gemini API only
  */
-export const extractNutritionFromImage = async (imageData, provider = 'gemini') => {
+export const extractNutritionFromImage = async (imageData) => {
     try {
-        const result = await extractWithProvider(imageData, provider);
+        const result = await extractWithGemini(imageData);
         if (result) {
-            console.log(`OCR: Used ${provider}`);
+            console.log('OCR: Used Gemini 2.5 Flash');
             return result;
         }
     } catch (error) {
-        console.error(`${provider} OCR failed:`, error.message);
+        console.error('Gemini OCR failed:', error.message);
         return {
             _source: 'error',
             _error: error.message
@@ -27,15 +27,15 @@ export const extractNutritionFromImage = async (imageData, provider = 'gemini') 
  * Extract nutrition data using Gemini 2.5 Flash API
  */
 /**
- * Extract nutrition data using specified provider
+ * Extract nutrition data using Gemini 2.5 Flash API
  */
-const extractWithProvider = async (imageData, provider) => {
+const extractWithGemini = async (imageData) => {
     const response = await fetch('/api/ocr', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ image: imageData, provider }),
+        body: JSON.stringify({ image: imageData }),
     });
 
     const result = await response.json();
@@ -73,7 +73,7 @@ const extractWithProvider = async (imageData, provider) => {
         sodium_100g: data.sodium_100g?.toString() || '',
         proteins_100g: data.proteins_100g?.toString() || '',
         fiber_100g: data.fiber_100g?.toString() || '',
-        _source: result.source || provider,
+        _source: 'gemini-2.5-flash',
         _debug: result.debug
     };
 };

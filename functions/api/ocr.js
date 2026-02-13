@@ -9,7 +9,7 @@ export async function onRequestPost(context) {
 
     try {
         const body = await request.json();
-        const { image, provider = 'gemini' } = body;
+        const { image } = body;
 
         if (!image) {
             return new Response(JSON.stringify({ error: 'Missing image data' }), {
@@ -30,30 +30,14 @@ export async function onRequestPost(context) {
         const mimeType = matches[1];
         const base64Data = matches[2];
 
-        let nutritionData;
-        let source = provider;
-
-        if (provider === 'mistral') {
-            try {
-                nutritionData = await extractWithMistral(env, mimeType, base64Data);
-            } catch (e) {
-                console.error('Mistral failed:', e.message);
-                if (e.message.includes('MISTRAL_API_KEY')) {
-                    throw e; // specific configuration error, don't fallback to mask it
-                }
-                console.log('Falling back to Gemini...');
-                source = 'gemini-fallback';
-                nutritionData = await extractWithGemini(env, mimeType, base64Data);
-            }
-        } else {
-            nutritionData = await extractWithGemini(env, mimeType, base64Data);
-        }
+        // Default to Gemini
+        const nutritionData = await extractWithGemini(env, mimeType, base64Data);
 
         // Return the extracted nutrition data
         return new Response(JSON.stringify({
             success: true,
             data: nutritionData,
-            source: source,
+            source: 'gemini-2.5-flash',
             debug: {
                 // Return debug info if needed
             }
@@ -152,63 +136,7 @@ Return this exact JSON structure (use null for any value not found):
     return JSON.parse(cleanedResponse.trim());
 }
 
-async function extractWithMistral(env, mimeType, base64Data) {
-    if (!env.MISTRAL_API_KEY) {
-        throw new Error('MISTRAL_API_KEY not configured');
-    }
 
-    const extractionPrompt = `Extract nutrition information from this food label image.
-Return ONLY valid JSON with this structure (use null if not found):
-{
-  "energy_100g": <number in kcal>,
-  "carbohydrates_100g": <number in grams>,
-  "sugars_100g": <number in grams>,
-  "fat_100g": <number in grams>,
-  "saturated_fat_100g": <number in grams>,
-  "sodium_100g": <number in mg>,
-  "proteins_100g": <number in grams>,
-  "fiber_100g": <number in grams>
-}`;
-
-    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${env.MISTRAL_API_KEY}`
-        },
-        body: JSON.stringify({
-            model: "mistral-small-latest",
-            messages: [
-                {
-                    role: "user",
-                    content: [
-                        { type: "text", text: extractionPrompt },
-                        {
-                            type: "image_url",
-                            image_url: `data:${mimeType};base64,${base64Data}`
-                        }
-                    ]
-                }
-            ],
-            response_format: { type: "json_object" } // Mistral supports JSON mode
-        })
-    });
-
-    if (!response.ok) {
-        throw new Error(await response.text());
-    }
-
-    const data = await response.json();
-    const content = data.choices[0].message.content;
-
-    // Parse JSON
-    try {
-        return JSON.parse(content);
-    } catch (e) {
-        console.error("Mistral JSON parse error, raw content:", content);
-        throw new Error("Failed to parse Mistral response as JSON");
-    }
-}
 
 // Health check endpoint
 export async function onRequestGet(context) {
